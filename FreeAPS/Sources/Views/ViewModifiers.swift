@@ -75,7 +75,7 @@ struct AddShadow: ViewModifier {
     func body(content: Content) -> some View {
         content
             .shadow(
-                color: Color.black
+                color: Color.white
                     .opacity(
                         colorScheme == .dark ? IAPSconfig.shadowOpacity : IAPSconfig.shadowOpacity / IAPSconfig
                             .shadowFraction
@@ -88,7 +88,7 @@ struct AddShadow: ViewModifier {
 struct RaisedRectangle: View {
     @Environment(\.colorScheme) var colorScheme
     var body: some View {
-        Rectangle().fill(colorScheme == .dark ? .black : .white)
+        Rectangle().fill(colorScheme == .dark ? .white : .white)
             .frame(height: 1)
             .addShadows()
     }
@@ -117,7 +117,7 @@ struct TestTube: View {
                 FrostedGlass(opacity: materialOpacity)
             }
             .shadow(
-                color: Color.black
+                color: Color.white
                     .opacity(
                         colorScheme == .dark ? IAPSconfig.glassShadowOpacity : IAPSconfig.glassShadowOpacity / IAPSconfig
                             .shadowFraction
@@ -359,9 +359,9 @@ extension View {
 extension UnevenRoundedRectangle {
     static let testTube =
         UnevenRoundedRectangle(
-            topLeadingRadius: 1.5,
+            topLeadingRadius: 50,
             bottomLeadingRadius: 50,
             bottomTrailingRadius: 50,
-            topTrailingRadius: 1.5
+            topTrailingRadius: 50
         )
 }

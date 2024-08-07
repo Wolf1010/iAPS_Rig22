@@ -7,6 +7,34 @@ struct LoopView: View {
         static let lag: TimeInterval = 30
     }
 
+    struct LoopCapsule: View {
+        var stroke: Color
+        var gradient: [Color] // Farben für den Farbverlauf
+
+        var body: some View {
+            Capsule()
+                .fill(LinearGradient(
+                    gradient: Gradient(colors: gradient),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )) // Fülle die Kapsel mit einem Farbverlauf
+                .overlay(
+                    Capsule().stroke(stroke, lineWidth: 0) // Zeichne den Rand der Kapsel
+                )
+                .shadow(color: .white, radius: 1, x: 0, y: 1) // Hier wird der weiße Schatten hinzugefügt
+        }
+    }
+
+    private var gradientColors: [Color] {
+        if isLooping {
+            return [.black, .purple]
+        } else if closedLoop {
+            return [.purple, .black]
+        } else {
+            return [.red]
+        }
+    }
+
     @Binding var suggestion: Suggestion?
     @Binding var enactedSuggestion: Suggestion?
     @Binding var closedLoop: Bool
@@ -24,34 +52,52 @@ struct LoopView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.sizeCategory) private var fontSize
 
+    // Berechne die Füllfarbe basierend auf deinen Bedingungen
+    private var fillColor: Color {
+        // Implementiere die Logik zur Bestimmung der Füllfarbe
+        if isLooping {
+            return .blue // Beispiel: Fülle mit Blau, wenn Looping
+        } else if closedLoop {
+            return .purple // Beispiel: Fülle mit Grün, wenn geschlossen
+        } else {
+            return .gray // Beispiel: Fülle mit Grau, wenn offen
+        }
+    }
+
     var body: some View {
         VStack {
-            let multiplyForLargeFonts = fontSize > .extraLarge ? 1.2 : 1
-            LoopEllipse(stroke: color)
-                .frame(width: minutesAgo > 9 ? 70 * multiplyForLargeFonts : 60 * multiplyForLargeFonts, height: 27)
-                .overlay {
-                    let textColor: Color = .secondary
-                    HStack {
-                        ZStack {
-                            if closedLoop {
-                                if !isLooping, actualSuggestion?.timestamp != nil {
-                                    if minutesAgo > 1440 {
-                                        Text("--").font(.loopFont).foregroundColor(textColor).padding(.leading, 5)
-                                    } else {
-                                        let timeString = "\(minutesAgo) " +
-                                            NSLocalizedString("min", comment: "Minutes ago since last loop")
-                                        Text(timeString).font(.loopFont).foregroundColor(textColor)
+            HStack(spacing: 10) { // Verwende HStack mit Abstand zwischen den Elementen
+                LoopCapsule(stroke: color, gradient: gradientColors)
+                    .frame(width: 70, height: 30) // Setze die Größe der Kapsel auf 70 x 30
+                    .overlay {
+                        let textColor: Color = .white
+                        HStack {
+                            ZStack {
+                                if closedLoop {
+                                    if !isLooping, actualSuggestion?.timestamp != nil {
+                                        if minutesAgo > 1440 {
+                                            Text("--").font(.loopFont).foregroundColor(textColor).padding(.leading, 5)
+                                        } else {
+                                            let timeString = "\(minutesAgo) " +
+                                                NSLocalizedString("min", comment: "Minutes ago since last loop")
+                                            Text(timeString).font(.loopFont).foregroundColor(textColor)
+                                        }
                                     }
+                                    if isLooping {
+                                        ProgressView()
+                                    }
+                                } else if !isLooping {
+                                    Text("Open").font(.loopFont)
                                 }
-                                if isLooping {
-                                    ProgressView()
-                                }
-                            } else if !isLooping {
-                                Text("Open").font(.loopFont)
                             }
                         }
                     }
-                }
+
+                Circle()
+                    .fill(color)
+                    .frame(width: 10, height: 10)
+            }
+            // .padding() // Optional: Füge Padding hinzu, um den HStack vom Rand zu entfernen
         }
     }
 
@@ -62,7 +108,7 @@ struct LoopView: View {
 
     private var color: Color {
         guard actualSuggestion?.timestamp != nil else {
-            return .loopGray
+            return .white
         }
         guard manualTempBasal == false else {
             return .loopManualTemp

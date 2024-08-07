@@ -39,27 +39,32 @@ struct PumpView: View {
     }
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 5) {
+            Image("danars2")
+                .resizable(resizingMode: .stretch)
+                .frame(width: IAPSconfig.iconSize * 0.8, height: IAPSconfig.iconSize * 1.4)
+                .offset(x: 0, y: -10)
             if let reservoir = reservoir {
                 if reservoir == 0xDEAD_BEEF {
                     HStack(spacing: 0) {
-                        Text("50+ ").font(.statusFont).bold()
-                        Text(NSLocalizedString("U", comment: "Insulin unit")).font(.statusFont).foregroundStyle(.secondary)
+                        Text("50+ ").foregroundColor(.white).font(.statusFont).bold()
+                        Text(NSLocalizedString("U", comment: "Insulin unit")).foregroundColor(.white).font(.statusFont).bold()
                     }
-                    .offset(x: 0, y: expiresAtDate == nil ? -4 : 0)
+                    .offset(x: 0, y: expiresAtDate == nil ? -10 : 0)
                 } else {
                     HStack(spacing: 0) {
                         Text(
                             reservoirFormatter
                                 .string(from: reservoir as NSNumber)!
-                        ).font(.statusFont).bold()
-                        Text(NSLocalizedString(" U", comment: "Insulin unit")).font(.statusFont).foregroundStyle(.secondary)
+                        ).foregroundColor(.white).font(.statusFont)
+                        Text(NSLocalizedString(" U", comment: "Insulin unit"))
+                            .foregroundColor(.white).font(.statusFont)
                     }
-                    .offset(x: 0, y: expiresAtDate == nil ? -4 : 0)
+                    .offset(x: 0, y: expiresAtDate == nil ? -10 : 0)
                 }
             } else {
-                Text("No Pump").font(.statusFont).foregroundStyle(.secondary)
-                    .offset(x: 0, y: -4)
+                Text("No Pump").font(.statusFont).foregroundStyle(.white).foregroundColor(.white)
+                    .offset(x: 0, y: -10)
             }
 
             if let battery = battery, !state.pumpName.contains("Omni") {
@@ -71,7 +76,7 @@ struct PumpView: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(maxHeight: 15)
                     .foregroundColor(batteryColor)
-                    .offset(x: 0, y: -4)
+                    .offset(x: 0, y: -11)
                     .overlay {
                         if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                             ClockOffset(mdtPump: true)
@@ -132,7 +137,7 @@ struct PumpView: View {
         case ...20:
             return .yellow
         default:
-            return .green
+            return .loopGreen
         }
     }
 
