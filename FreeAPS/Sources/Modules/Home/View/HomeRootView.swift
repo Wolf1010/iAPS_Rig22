@@ -82,6 +82,13 @@ extension Home {
             return formatter
         }
 
+        private var danatargetFormatter: NumberFormatter {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 2
+            return formatter
+        }
+
         private var tirFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -194,11 +201,11 @@ extension Home {
                     HStack {
                         if state.pumpSuspended {
                             Text("Pump suspended")
-                                .font(.extraSmall).bold().foregroundColor(.white)
+                                .font(.extraSmall).bold().foregroundStyle(Color.white)
                         } else if let tempBasalString = tempBasalString {
                             Text(tempBasalString)
                                 .font(.statusFont).bold()
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.white)
                         }
                         if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
                             Text("Check Max IOB Setting").font(.extraSmall).foregroundColor(.orange)
@@ -211,7 +218,7 @@ extension Home {
                 if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
                     Text(tempTargetString)
                         .font(.buttonFont)
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.white)
                 } else {
                     profileView
                 }
@@ -227,7 +234,8 @@ extension Home {
                                     from: (state.units == .mmolL ? eventualBG.asMmolL : Decimal(eventualBG)) as NSNumber
                                 )!
                             ).font(.statusFont).foregroundColor(colorScheme == .dark ? .white : .white)
-                            Text(state.units.rawValue).font(.system(size: 12)).foregroundStyle(.white).foregroundColor(.white)
+                            Text(state.units.rawValue).font(.system(size: 12)).foregroundStyle(.white)
+                                .foregroundStyle(Color.white)
                         }
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.trailing, 8)
@@ -320,11 +328,11 @@ extension Home {
                                 .font(.custom("Buttons", size: 24))
                                 .foregroundColor(colorScheme == .dark ? .white : .white)
                                 .padding(8)
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.white)
                             if let carbsReq = state.carbsRequired {
                                 Text(numberFormatter.string(from: carbsReq as NSNumber)!)
                                     .font(.caption)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(Color.white)
                                     .padding(4)
                                     .background(Capsule().fill(Color.red))
                             }
@@ -343,7 +351,7 @@ extension Home {
                             .font(.custom("Buttons", size: 24))
                     }
                     .buttonStyle(.borderless)
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.white)
                     Spacer()
                     if state.allowManualTemp {
                         Button { state.showModal(for: .manualTempBasal) }
@@ -353,7 +361,7 @@ extension Home {
                                 .resizable()
                                 .frame(width: IAPSconfig.buttonSize, height: IAPSconfig.buttonSize, alignment: .bottom)
                         }
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.white)
                         Spacer()
                     }
                     ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
@@ -381,7 +389,7 @@ extension Home {
                             .renderingMode(.template)
                             .font(.custom("Buttons", size: 24))
                             .padding(8)
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.white)
                             .background(isTarget ? .green.opacity(0.15) : .clear)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .onTapGesture {
@@ -403,7 +411,7 @@ extension Home {
                             .font(.custom("Buttons", size: 24))
                     }
                     .buttonStyle(.borderless)
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.white)
                 }
                 .padding(.horizontal, state.allowManualTemp ? 5 : 24)
                 .padding(.bottom, geo.safeAreaInsets.bottom)
@@ -426,7 +434,7 @@ extension Home {
             let ratio = state.timeSettings ? 1.61 : 1.44
             let ratio2 = state.timeSettings ? 1.65 : 1.51
 
-            return addColouredBackground()
+            return addBackground()
                 .overlay {
                     VStack(spacing: 0) {
                         infoPanel
@@ -457,9 +465,9 @@ extension Home {
                         HStack(spacing: 0) {
                             Text(
                                 numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
-                            ).font(.statusFont).bold().foregroundColor(.white)
+                            ).font(.statusFont).bold().foregroundStyle(Color.white)
                             Text(NSLocalizedString(" g", comment: "gram of carbs")).font(.statusFont)
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.white)
                         }.offset(x: 0, y: 5)
                     }
                     HStack {
@@ -478,9 +486,9 @@ extension Home {
                         HStack(spacing: 0) {
                             Text(
                                 numberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
-                            ).font(.statusFont).bold().foregroundColor(.white)
+                            ).font(.statusFont).bold().foregroundStyle(Color.white)
                             Text(NSLocalizedString(" U", comment: "Insulin unit")).font(.statusFont).foregroundStyle(.white)
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.white)
                         }.offset(x: 0, y: 5)
                     }
                 }
@@ -494,9 +502,8 @@ extension Home {
                     PreviewChart(readings: $state.readings, lowLimit: $state.lowGlucose, highLimit: $state.highGlucose)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15))
-//                .addShadows()
-                //               .colorInvert()
                 .padding(.horizontal, 10)
+                .foregroundStyle(Color.white)
                 .onTapGesture {
                     state.showModal(for: .statistics)
                 }
@@ -518,9 +525,8 @@ extension Home {
                     )
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15))
-//                .addShadows()
-                //              .colorInvert()
                 .padding(.horizontal, 10)
+                .foregroundStyle(Color.white)
         }
 
         var activeCOBView: some View {
@@ -530,8 +536,7 @@ extension Home {
                     ActiveCOBView(data: $state.iobData)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15))
-//            .addShadows()
-//                .colorInvert()
+                .foregroundStyle(Color.white)
                 .padding(.horizontal, 10)
         }
 
@@ -542,9 +547,8 @@ extension Home {
                     LoopsView(loopStatistics: $state.loopStatistics)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 15))
-//            .addShadows()
-//                .colorInvert()
                 .padding(.horizontal, 10)
+                .foregroundStyle(Color.white)
                 .onTapGesture {
                     state.showModal(for: .statistics)
                 }
@@ -586,32 +590,40 @@ extension Home {
             }
         }
 
-        /*       func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
-             ZStack {
-                 HStack {
-                     VStack {
-                         HStack {
-                             Text("Bolusing")
-                                 .foregroundColor(.primary).font(.bolusProgressFont)
-                             let bolused = targetFormatter.string(from: (amount * progress) as NSNumber) ?? ""
-
-                             Text(
+        func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
+            ZStack {
+                HStack {
+                    VStack {
+                        HStack {
+                            Text("Bolusing")
+                                .foregroundColor(.white)
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                            let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
+                            /*                            Text(
                                  bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
-                                     .formatted() + NSLocalizedString(" U", comment: "")
-                             ).font(.bolusProgressBarFont)
-                         }
-                         ProgressView(value: Double(progress))
-                             .progressViewStyle(BolusProgressViewStyle())
-                     }
-                     Image(systemName: "xmark.square.fill")
-                         .symbolRenderingMode(.palette)
-                         .foregroundStyle(.white, .blue)
-                         .font(.bolusProgressStopFont)
-                         .onTapGesture { state.cancelBolus() }
-                         .offset(x: 10, y: 0)
-                 }
-             }
-         } */
+                                     .formatted() + NSLocalizedString(" U", comment: " ")
+                             )*/
+                            Text(
+                                bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
+                                    .formatted(.number.precision(.fractionLength(2))) +
+                                    NSLocalizedString(" U", comment: " ")
+                            )
+                            .font(.subheadline)
+                            .foregroundStyle(Color.white)
+                        }
+                        ProgressView(value: Double(progress))
+                            .progressViewStyle(BolusProgressViewStyle())
+                    }
+                    Image(systemName: "xmark.square.fill")
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, .black)
+                        .font(.system(size: 22))
+                        .onTapGesture { state.cancelBolus() }
+                        .offset(x: 35, y: 0)
+                }
+            }
+        }
 
         @ViewBuilder func bolusProgressBar(_ progress: Decimal) -> some View {
             GeometryReader { geo in
@@ -634,50 +646,53 @@ extension Home {
             }
         }
 
-        func bolusProgressView(_: GeometryProxy, _ progress: Decimal) -> some View {
-            let colorRectangle = Color.black // Setze die Hintergrundfarbe auf Schwarz
+        /*        func bolusProgressView(_: GeometryProxy, _ progress: Decimal) -> some View {
+             let colorRectangle = Color.black // Setze die Hintergrundfarbe auf Schwarz
 
-            let colorIcon = (colorScheme == .dark ? Color.white : Color.black).opacity(0.9)
+             let colorIcon = (colorScheme == .dark ? Color.white : Color.black).opacity(0.9)
 
-            let bolusTotal = state.boluses.last?.amount ?? 0
-            let bolusFraction = progress * bolusTotal
+             let bolusTotal = state.boluses.last?.amount ?? 0
+             let bolusFraction = progress * bolusTotal
 
-            let bolusString =
-                (
-                    bolusProgressFormatter
-                        .string(from: bolusFraction as NSNumber) ??
-                        "0"
-                )
-                + " of " +
-                (bolusProgressFormatter.string(from: bolusTotal as NSNumber) ?? "0,00")
-                + NSLocalizedString(" U", comment: "Insulin unit")
+             let bolusString =
+                 (
+                     bolusProgressFormatter
+                         .string(from: bolusFraction as NSNumber) ??
+                         "0"
+                 )
+                 + " of " +
+                 (bolusProgressFormatter.string(from: bolusTotal as NSNumber) ?? "0,00")
+                 + NSLocalizedString(" U", comment: "Insulin unit")
 
-            return ZStack(alignment: .bottom) {
-                HStack {
-                    Text("Bolusing")
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                    Text(bolusString)
-                        .font(.subheadline)
-                    Spacer()
-                    Button {
-                        state.cancelBolus()
-                    } label: {
-                        Image(systemName: "xmark.circle")
-                            .font(.system(size: 22))
-                            .padding(1)
-                    }.foregroundColor(colorIcon)
-                }.padding()
-                bolusProgressBar(progress).offset(y: 48)
-            }
-            .background(colorRectangle)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
-            .shadow(color: .white, radius: 10, x: 0, y: 0) // Hier wird der weiße Schatten hinzugefügt
-            .frame(height: 20, alignment: .center)
-            .padding(10)
-            .onTapGesture {
-                state.isStatusPopupPresented.toggle() }
-        }
+             return ZStack(alignment: .bottom) {
+                 HStack {
+                     Text("Bolusing")
+                         .font(.subheadline)
+                         .fontWeight(.bold)
+                         .foregroundStyle(Color.white)
+                     Text(bolusString)
+                         .font(.subheadline).foregroundStyle(Color.white)
+                     Spacer()
+                     Button {
+                         state.cancelBolus()
+                     } label: {
+                         Image(systemName: "xmark.circle")
+                             .font(.system(size: 22))
+         .foregroundStyle(Color.white)
+                             .padding(1)
+                     }.foregroundColor(colorIcon)
+                 }
+                .padding()
+                 bolusProgressBar(progress).offset(y: 48)
+             }
+             .background(colorRectangle)
+             .clipShape(RoundedRectangle(cornerRadius: 8))
+             .shadow(color: .white, radius: 5, x: 0, y: 0)
+             .frame(height: 20, alignment: .center)
+             .padding(10)
+             .onTapGesture {
+                 state.isStatusPopupPresented.toggle() }
+         }*/
 
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addHeaderBackground()
@@ -716,7 +731,7 @@ extension Home {
         }
 
         @ViewBuilder private func glucoseHeaderView() -> some View {
-            addHeaderBackground()
+            addBackground()
                 .frame(maxHeight: 90)
                 .overlay {
                     VStack {
@@ -732,6 +747,7 @@ extension Home {
                     }
                 }
                 .clipShape(Rectangle())
+                .foregroundStyle(Color.white)
         }
 
         var glucosePreview: some View {
@@ -778,6 +794,7 @@ extension Home {
             .padding(.trailing, 32)
             .padding(.top, 10)
             .padding(.bottom, 10)
+            .foregroundStyle(Color.white)
         }
 
         var timeSetting: some View {
@@ -790,7 +807,7 @@ extension Home {
                 Button("UI/UX Settings", action: { state.showModal(for: .statisticsConfig) })
             }
             .buttonStyle(.borderless)
-            .foregroundStyle(colorScheme == .dark ? .primary : Color(.darkGray))
+            .foregroundStyle(Color.white)
             .font(.timeSettingFont)
             .padding(.vertical, 15)
             .background(TimeEllipse(characters: string.count))
@@ -842,9 +859,22 @@ extension Home {
                         .opacity(IAPSconfig.backgroundOpacity * 2)
                 )
                 .ignoresSafeArea(edges: .vertical)
+//                .overlay {
+//                    if let progress = state.bolusProgress {
+//                        bolusProgressView(geo, progress)
+//                    }
+//                }
                 .overlay {
-                    if let progress = state.bolusProgress {
-                        bolusProgressView(geo, progress)
+                    if let progress = state.bolusProgress, let amount = state.bolusAmount {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 15)
+                                .fill(.black.opacity(1.0))
+                                .frame(width: 380, height: 60)
+                            bolusProgressView(progress: progress, amount: amount)
+                        }
+                        //                       .frame(width: 380, alignment: .center)
+                        .shadow(color: .white, radius: 5, x: 0, y: 0)
+                        .offset(x: 0, y: -100)
                     }
                 }
             }
@@ -878,26 +908,26 @@ extension Home {
 
         var popup: some View {
             VStack(alignment: .leading, spacing: 4) {
-                Text(state.statusTitle).font(.suggestionHeadline).foregroundColor(.white)
+                Text(state.statusTitle).font(.suggestionHeadline).foregroundStyle(Color.white)
                     .padding(.bottom, 4)
                 if let suggestion = state.suggestion {
                     TagCloudView(tags: suggestion.reasonParts).animation(.none, value: false)
 
                     Text(suggestion.reasonConclusion.capitalizingFirstLetter()).font(.suggestionSmallParts)
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.white)
                 } else {
-                    Text("No sugestion found").font(.suggestionHeadline).foregroundColor(.white)
+                    Text("No sugestion found").font(.suggestionHeadline).foregroundStyle(Color.white)
                 }
                 if let errorMessage = state.errorMessage, let date = state.errorDate {
                     Text(NSLocalizedString("Error at", comment: "") + " " + dateFormatter.string(from: date))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.white)
                         .font(.suggestionError)
                         .padding(.bottom, 4)
                         .padding(.top, 8)
                     Text(errorMessage).font(.suggestionError).fontWeight(.semibold).foregroundColor(.orange)
                 } else if let suggestion = state.suggestion, (suggestion.bg ?? 100) == 400 {
                     Text("Invalid CGM reading (HIGH).").font(.suggestionError).bold().foregroundColor(.loopRed).padding(.top, 8)
-                    Text("SMBs and High Temps Disabled.").font(.suggestionParts).foregroundColor(.white).padding(.bottom, 4)
+                    Text("SMBs and High Temps Disabled.").font(.suggestionParts).foregroundStyle(Color.white).padding(.bottom, 4)
                 }
             }
             .padding()

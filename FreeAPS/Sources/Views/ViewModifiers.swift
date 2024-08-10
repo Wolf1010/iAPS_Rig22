@@ -142,8 +142,7 @@ struct ColouredRoundedBackground: View {
         Rectangle()
             // RoundedRectangle(cornerRadius: 15)
             .fill(
-                colorScheme == .dark ? .black :
-                    Color.white
+                Color.black
             )
     }
 }

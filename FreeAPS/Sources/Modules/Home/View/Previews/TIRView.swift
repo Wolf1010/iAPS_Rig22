@@ -121,7 +121,7 @@ struct PreviewChart: View {
         data = prepareData(data_: data)
 
         return VStack {
-            Text("Time In Range").padding(.bottom, 10).font(.previewHeadline)
+            Text("Time In Range").padding(.bottom, 10).font(.previewHeadline).foregroundColor(.white) // Textfarbe auf weiß setzen
 
             Chart(data) { item in
                 BarMark(
@@ -143,10 +143,12 @@ struct PreviewChart: View {
                         HStack {
                             if item.percentage < 1 {
                                 Text("< 1%")
+                                    .foregroundStyle(Color.white)
                             } else {
                                 Text((tirFormatter.string(from: item.percentage as NSNumber) ?? "") + "%")
-                            }
+                                    .foregroundStyle(Color.white) }
                             Text(item.group)
+                                .foregroundStyle(Color.white)
                         }.font(.previewNormal)
                             .padding(.leading, 10)
                     } else if item.group == NSLocalizedString(
@@ -156,14 +158,16 @@ struct PreviewChart: View {
                         HStack {
                             if item.percentage < 1 {
                                 Text("< 1%")
+                                    .foregroundStyle(Color.white)
                             } else {
                                 Text((tirFormatter.string(from: item.percentage as NSNumber) ?? "") + "%")
+                                    .foregroundStyle(Color.white)
                             }
                             Text(item.group)
-                        }
-                        .offset(x: 0, y: item.offset)
-                        .font(.loopFont)
-                        .padding(.leading, 10)
+                                .foregroundStyle(Color.white) }
+                            .offset(x: 0, y: item.offset)
+                            .font(.loopFont)
+                            .padding(.leading, 10)
                     } else if item.group == NSLocalizedString(
                         "High",
                         comment: ""
@@ -171,14 +175,16 @@ struct PreviewChart: View {
                         HStack {
                             if item.percentage < 1 {
                                 Text("< 1%")
+                                    .foregroundStyle(Color.white)
                             } else {
                                 Text((tirFormatter.string(from: item.percentage as NSNumber) ?? "") + "%")
+                                    .foregroundStyle(Color.white)
                             }
                             Text(item.group)
-                        }
-                        .offset(x: 0, y: item.offset)
-                        .font(.loopFont)
-                        .padding(.leading, 10)
+                                .foregroundStyle(Color.white) }
+                            .offset(x: 0, y: item.offset)
+                            .font(.loopFont)
+                            .padding(.leading, 10)
                     } else if item.group == NSLocalizedString(
                         "Very High",
                         comment: ""
@@ -186,10 +192,12 @@ struct PreviewChart: View {
                         HStack {
                             if item.percentage < 1 {
                                 Text("< 1%")
-                            } else {
+                                    .foregroundStyle(Color.white) } else {
                                 Text((tirFormatter.string(from: item.percentage as NSNumber) ?? "") + "%")
+                                    .foregroundStyle(Color.white)
                             }
                             Text(item.group)
+                                .foregroundStyle(Color.white)
                         }
                         .offset(x: 0, y: item.offset)
                         .font(.loopFont)
@@ -201,14 +209,18 @@ struct PreviewChart: View {
                         HStack {
                             if item.percentage < 1 {
                                 Text("< 1%")
+                                    .foregroundStyle(Color.white)
                             } else {
                                 Text((tirFormatter.string(from: item.percentage as NSNumber) ?? "") + "%")
+                                    .foregroundStyle(Color.white)
                             }
                             Text(item.group)
+                                .foregroundStyle(Color.white)
                         }
                         .offset(x: 0, y: item.offset)
                         .font(.loopFont)
                         .padding(.leading, 10)
+                        .foregroundStyle(Color.white)
                     }
                 }
             }
@@ -236,11 +248,13 @@ struct PreviewChart: View {
             .chartYAxis(.hidden)
             .chartLegend(.hidden)
             .padding(.bottom, 15)
+            .foregroundStyle(Color.white)
             .frame(maxWidth: UIScreen.main.bounds.width / 5)
             .offset(x: -UIScreen.main.bounds.width / 5, y: 0)
         }.frame(maxHeight: 200)
             .padding(.top, 20)
             .dynamicTypeSize(...DynamicTypeSize.xLarge)
+            .foregroundStyle(Color.white)
     }
 
     private func previewTir() -> [(decimal: Decimal, string: String)] {
