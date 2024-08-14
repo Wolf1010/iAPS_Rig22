@@ -22,6 +22,8 @@ struct PumpView: View {
     private var batteryFormatter: NumberFormatter {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
+        formatter.maximumFractionDigits = 0
+        formatter.multiplier = 1 // Multiplikator auf 1, um den Prozentsatz korrekt darzustellen
         return formatter
     }
 
@@ -38,52 +40,92 @@ struct PumpView: View {
         return dateFormatter
     }
 
-    var body: some View {
-        HStack(spacing: 5) {
-            Image("danars2")
-                .resizable(resizingMode: .stretch)
-                .frame(width: IAPSconfig.iconSize * 0.8, height: IAPSconfig.iconSize * 1.4)
-                .offset(x: 0, y: -10)
-            if let reservoir = reservoir {
-                if reservoir == 0xDEAD_BEEF {
-                    HStack(spacing: 0) {
-                        Text("50+ ").foregroundColor(.white).font(.statusFont).bold()
-                        Text(NSLocalizedString("U", comment: "Insulin unit")).foregroundColor(.white).font(.statusFont).bold()
-                    }
-                    .offset(x: 0, y: expiresAtDate == nil ? -10 : 0)
-                } else {
-                    HStack(spacing: 0) {
-                        Text(
-                            reservoirFormatter
-                                .string(from: reservoir as NSNumber)!
-                        ).foregroundColor(.white).font(.statusFont)
-                        Text(NSLocalizedString(" U", comment: "Insulin unit"))
-                            .foregroundColor(.white).font(.statusFont)
-                    }
-                    .offset(x: 0, y: expiresAtDate == nil ? -10 : 0)
+    struct FillableCircle: View {
+        var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
+        var color: Color // Farbe der Füllung
+        var opacity: CGFloat // Transparenz des Hintergrundkreises
+        var displayText: String? // Text, der im Kreis angezeigt wird
+        var symbol: String? // Optionales Symbol
+
+        var body: some View {
+            ZStack {
+                Circle()
+                    .stroke(lineWidth: 4)
+                    .opacity(Double(opacity))
+                    .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
+
+                Circle()
+                    .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
+                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
+                    .animation(.easeInOut, value: fillFraction) // Animation der Füllung
+
+                if let text = displayText {
+                    Text(text)
+                        .font(.statusFont)
+//                        .foregroundColor(color)
+                        .foregroundStyle(Color.white)
+                        .bold()
                 }
+
+                if let symbol = symbol {
+                    Image(systemName: symbol)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20) // Größe des Symbols im Kreis
+                        .foregroundColor(color)
+                }
+            }
+            .frame(width: 40, height: 40) // Größe des Kreises
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            // Reservoir-Anzeige
+            if let reservoir = reservoir {
+                let maxValue = Decimal(300) // Maximalwert als Decimal
+                let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
+                let fill = max(min(fraction, 1.0), 0.0)
+
+                FillableCircle(
+                    fillFraction: fill,
+                    color: reservoirColor,
+                    opacity: 1.0,
+                    displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" : reservoirFormatter
+                        .string(from: reservoir as NSNumber),
+                    symbol: nil // Kein Symbol für die Reservoir-Anzeige
+                )
+                .padding(.trailing, 8)
+                .layoutPriority(1)
             } else {
-                Text("No Pump").font(.statusFont).foregroundStyle(.white).foregroundColor(.white)
-                    .offset(x: 0, y: -10)
+                Text("No Pump").font(.subheadline)
+                    .foregroundStyle(.white)
+                    .foregroundColor(.white)
+                    .offset(x: -22, y: 0)
             }
 
+            // Batterieanzeige
             if let battery = battery, !state.pumpName.contains("Omni") {
+                let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
+                let batteryFill = max(min(batteryFraction, 1.0), 0.0)
                 let percent = (battery.percent ?? 100) > 80 ? 100 : (battery.percent ?? 100) < 81 &&
                     (battery.percent ?? 100) >
                     60 ? 75 : (battery.percent ?? 100) < 61 && (battery.percent ?? 100) > 40 ? 50 : 25
-                Image(systemName: "battery.\(percent)")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxHeight: 15)
-                    .foregroundColor(batteryColor)
-                    .offset(x: 0, y: -11)
-                    .overlay {
-                        if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
-                            ClockOffset(mdtPump: true)
-                        }
-                    }
+                let batterySymbol = "battery.\(percent)" // Symbol basierend auf Batterieprozentsatz
+
+                FillableCircle(
+                    fillFraction: batteryFill,
+                    color: batteryColor,
+                    opacity: 1.0,
+                    displayText: nil, // Kein Text für die Batterieanzeige
+                    symbol: batterySymbol // Batteriesymbol hinzufügen
+                )
+                .padding(.trailing, 8)
+                .layoutPriority(1)
             }
 
+            // Anzeige des Ablaufdatums
             if let date = expiresAtDate {
                 Image("pod_reservoir")
                     .resizable(resizingMode: .stretch)
@@ -99,7 +141,7 @@ struct PumpView: View {
                     .font(.pumpFont)
                     .offset(x: -7, y: 0)
             } else if state.pumpName.contains("Omni") {
-                Text("No Pod").font(.statusFont).foregroundStyle(.secondary)
+                Text("No Pod").font(.subheadline).foregroundStyle(.secondary)
                     .offset(x: 0, y: -4)
             }
         }

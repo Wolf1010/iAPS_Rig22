@@ -68,7 +68,7 @@ struct LoopView: View {
         VStack {
             HStack(spacing: 10) { // Verwende HStack mit Abstand zwischen den Elementen
                 LoopCapsule(stroke: color, gradient: gradientColors)
-                    .frame(width: 70, height: 30) // Setze die Größe der Kapsel auf 70 x 30
+                    .frame(width: 70, height: 30) // Setzt die Größe der Kapsel auf 70 x 30
                     .overlay {
                         let textColor: Color = .white
                         HStack {

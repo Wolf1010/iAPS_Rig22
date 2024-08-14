@@ -55,6 +55,13 @@ extension Home {
             return formatter
         }
 
+        private var insulinnumberFormatter: NumberFormatter {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 1
+            return formatter
+        }
+
         private var bolusProgressFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -126,6 +133,93 @@ extension Home {
                     state.showModal(for: .snooze)
                 } else {
                     state.openCGM()
+                }
+            }
+        }
+
+        struct FillableCircle: View {
+            var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
+            var color: Color // Farbe der Füllung
+            var opacity: CGFloat // Transparenz des Hintergrundkreises
+
+            var body: some View {
+                ZStack {
+                    Circle()
+                        .stroke(lineWidth: 4)
+                        .opacity(Double(opacity))
+                        .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
+
+                    Circle()
+                        .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
+                        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
+                        .animation(.easeInOut, value: fillFraction) // Animation der Füllung
+                }
+                .frame(width: 40, height: 40) // Größe des Kreises
+            }
+        }
+
+        var carbsAndInsulinView: some View {
+            HStack {
+                if let settings = state.settingsManager {
+                    let opacity: CGFloat = colorScheme == .light ? 0.2 : 0.6
+
+                    HStack(spacing: 7) {
+                        VStack {
+                            let substance = Double(state.suggestion?.cob ?? 0)
+                            let maxValue = max(Double(settings.preferences.maxCOB), 1)
+                            let fraction = CGFloat(substance / maxValue)
+                            let fill = max(min(fraction, 1.0), 0.0)
+
+                            FillableCircle(fillFraction: fill, color: .loopYellow, opacity: opacity)
+                                .frame(width: 40, height: 40) // Feste Größe für den Kreis
+                                .padding(.trailing, 8) // Abstand zum Text
+                                .layoutPriority(1) // Priorität für das Layout
+
+                            HStack(spacing: 4) {
+                                Text(
+                                    numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
+                                )
+                                .font(.statusFont)
+                                .bold()
+                                .foregroundColor(.white)
+                                //   .fixedSize(horizontal: true, vertical: false) // Verhindert das Ausdehnen
+                                .offset(x: -4, y: -35)
+
+                                /*                              Text(NSLocalizedString(" g", comment: "gram of carbs"))
+                                 .font(.statusFont)
+                                 .foregroundColor(.white)*/
+                            }
+                        }
+
+                        VStack {
+                            let substance = Double(state.suggestion?.iob ?? 0)
+                            let maxValue = max(Double(settings.preferences.maxIOB), 1)
+                            let fraction = CGFloat(substance / maxValue)
+                            let fill = max(min(fraction, 1.0), 0.0)
+
+                            FillableCircle(fillFraction: fill, color: substance < 0 ? .blue : .insulin, opacity: 1.0)
+                                .frame(width: 40, height: 40) // Feste Größe für den Kreis
+                                .padding(.trailing, 8) // Abstand zum Text
+                                .layoutPriority(1) // Priorität für das Layout
+
+                            HStack(spacing: 4) {
+                                Text(
+                                    insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
+                                )
+                                .font(.statusFont)
+                                .bold()
+                                .foregroundColor(.white)
+                                // .fixedSize(horizontal: true, vertical: false) // Verhindert das Ausdehnen
+                                .offset(x: -4, y: -36)
+
+                                /*                               Text(NSLocalizedString(" U", comment: "Insulin unit"))
+                                 .font(.statusFont)
+                                 .foregroundColor(.white)*/
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 5) // Polsterung innerhalb des HStacks
                 }
             }
         }
@@ -237,10 +331,6 @@ extension Home {
             }.dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
 
-        /*        var infoPanel: some View {
-             info
-                 .frame(minHeight: 35, maxHeight: 35)
-         } */
         var infoPanel: some View {
             ZStack {
                 LinearGradient(
@@ -319,7 +409,7 @@ extension Home {
                             Image(systemName: "fork.knife")
                                 .renderingMode(.template)
                                 .font(.custom("Buttons", size: 24))
-                                .foregroundColor(colorScheme == .dark ? .white : .white)
+                                .foregroundColor(colorScheme == .dark ? .loopYellow : .orange)
                                 .padding(8)
                                 .foregroundStyle(Color.white)
                             if let carbsReq = state.carbsRequired {
@@ -344,7 +434,7 @@ extension Home {
                             .font(.custom("Buttons", size: 24))
                     }
                     .buttonStyle(.borderless)
-                    .foregroundStyle(Color.white)
+                    .foregroundStyle(Color.blue)
                     Spacer()
                     if state.allowManualTemp {
                         Button { state.showModal(for: .manualTempBasal) }
@@ -435,57 +525,6 @@ extension Home {
                     }
                 }
                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
-        }
-
-        var carbsAndInsulinView: some View {
-            HStack {
-                if let settings = state.settingsManager {
-                    let opacity: CGFloat = colorScheme == .light ? 0.2 : 0.6
-                    let materialOpacity: CGFloat = colorScheme == .light ? 0.25 : 0.10
-                    HStack {
-                        let substance = Double(state.suggestion?.cob ?? 0)
-                        let max = max(Double(settings.preferences.maxCOB), 1)
-                        let fraction: Double = 1 - (substance / max)
-                        let fill = CGFloat(min(Swift.max(fraction, 0.05), substance > 0 ? 0.92 : 0.97))
-                        TestTube(
-                            opacity: opacity,
-                            amount: fill,
-                            colourOfSubstance: .loopYellow,
-                            materialOpacity: materialOpacity
-                        )
-                        .frame(width: 12, height: 38)
-                        .offset(x: 0, y: -5)
-                        HStack(spacing: 0) {
-                            Text(
-                                numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
-                            ).font(.statusFont).bold().foregroundStyle(Color.white)
-                            Text(NSLocalizedString(" g", comment: "gram of carbs")).font(.statusFont)
-                                .foregroundStyle(Color.white)
-                        }.offset(x: 0, y: 5)
-                    }
-                    HStack {
-                        let substance = Double(state.suggestion?.iob ?? 0)
-                        let max = max(Double(settings.preferences.maxIOB), 1)
-                        let fraction: Double = 1 - (substance / max)
-                        let fill = CGFloat(min(Swift.max(fraction, 0.05), substance > 0 ? 0.92 : 0.98))
-                        TestTube(
-                            opacity: opacity,
-                            amount: fill,
-                            colourOfSubstance: substance < 0 ? .red : .insulin,
-                            materialOpacity: materialOpacity
-                        )
-                        .frame(width: 12, height: 38)
-                        .offset(x: 0, y: -5)
-                        HStack(spacing: 0) {
-                            Text(
-                                numberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
-                            ).font(.statusFont).bold().foregroundStyle(Color.white)
-                            Text(NSLocalizedString(" U", comment: "Insulin unit")).font(.statusFont).foregroundStyle(.white)
-                                .foregroundStyle(Color.white)
-                        }.offset(x: 0, y: 5)
-                    }
-                }
-            }
         }
 
         var preview: some View {
@@ -641,7 +680,7 @@ extension Home {
                                 Spacer()
                                 pumpView
                                     .frame(maxHeight: .infinity, alignment: .bottom)
-                                    .padding(.bottom, 2)
+                                    .padding(.bottom, 30)
                             }
                             .dynamicTypeSize(...DynamicTypeSize.xLarge)
                             .padding(.horizontal, 10)
