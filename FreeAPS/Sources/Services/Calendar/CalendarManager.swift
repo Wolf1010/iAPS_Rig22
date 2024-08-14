@@ -106,16 +106,9 @@ final class BaseCalendarManager: CalendarManager, Injectable {
 
         // Latest Loop data (from CoreData)
         var freshLoop: Double = 20
-        var lastLoop = [LastLoop]()
+        let lastLoop = [LastLoop]()
         if displeyCOBandIOB || displayEmojis {
-            coredataContext.performAndWait {
-                let requestLastLoop = LastLoop.fetchRequest() as NSFetchRequest<LastLoop>
-                let sortLoops = NSSortDescriptor(key: "timestamp", ascending: false)
-                requestLastLoop.sortDescriptors = [sortLoops]
-                requestLastLoop.fetchLimit = 1
-                try? lastLoop = coredataContext.fetch(requestLastLoop)
-            }
-            freshLoop = -1 * (lastLoop.first?.timestamp ?? .distantPast).timeIntervalSinceNow.minutes
+            freshLoop = -1 * (CoreDataStorage().fetchLastLoop()?.timestamp ?? .distantPast).timeIntervalSinceNow.minutes
         }
 
         var glucoseIcon = "🟢"
