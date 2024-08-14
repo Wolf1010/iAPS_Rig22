@@ -174,9 +174,9 @@ struct PumpView: View {
             return .gray
         }
         switch percent {
-        case ...10:
+        case ...25:
             return .red
-        case ...20:
+        case ...50:
             return .yellow
         default:
             return .loopGreen

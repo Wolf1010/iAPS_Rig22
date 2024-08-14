@@ -395,7 +395,7 @@ extension Home {
             ZStack {
                 addBackground()
                 LinearGradient(
-                    gradient: Gradient(colors: [.black, .purple]),
+                    gradient: Gradient(colors: [.black, .blueComplicationBackground]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -666,7 +666,7 @@ extension Home {
                     VStack {
                         ZStack {
                             LinearGradient(
-                                gradient: Gradient(colors: [.purple, .black]),
+                                gradient: Gradient(colors: [.blueComplicationBackground, .black]),
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
