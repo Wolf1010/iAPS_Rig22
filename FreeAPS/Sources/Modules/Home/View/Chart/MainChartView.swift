@@ -315,7 +315,7 @@ struct MainChartView: View {
                     Path { path in
                         path.move(to: CGPoint(x: 0, y: range.minY + topstep))
                         path.addLine(to: CGPoint(x: fullSize.width, y: range.minY + topstep))
-                    }.stroke(Color.purple, lineWidth: 0.6) // .StrokeStyle(lineWidth: 0.5, dash: [5])
+                    }.stroke(Color.blue, lineWidth: 0.6) // .StrokeStyle(lineWidth: 0.5, dash: [5])
                 }
                 let yrange = glucoseYRange
                 let bottomstep = (yrange.maxY - yrange.minY) / CGFloat(yrange.maxValue - yrange.minValue) *
@@ -324,7 +324,7 @@ struct MainChartView: View {
                     Path { path in
                         path.move(to: CGPoint(x: 0, y: yrange.minY + bottomstep))
                         path.addLine(to: CGPoint(x: fullSize.width, y: yrange.minY + bottomstep))
-                    }.stroke(Color.purple, lineWidth: 0.6)
+                    }.stroke(Color.blue, lineWidth: 0.6)
                 }
             }
         }

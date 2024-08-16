@@ -45,14 +45,15 @@ struct PumpView: View {
         var color: Color // Farbe der Füllung
         var opacity: CGFloat // Transparenz des Hintergrundkreises
         var displayText: String? // Text, der im Kreis angezeigt wird
-        var symbol: String? // Optionales Symbol
+        var symbol: String? // Symbol, das im Kreis angezeigt wird
+        var symbolSize: CGFloat = 20 // Symbolgröße, Standardgröße ist 20
 
         var body: some View {
             ZStack {
                 Circle()
                     .stroke(lineWidth: 4)
                     .opacity(Double(opacity))
-                    .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
+                    .foregroundColor(color.opacity(0.4)) // Hintergrund des Kreises
 
                 Circle()
                     .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
@@ -60,29 +61,35 @@ struct PumpView: View {
                     .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
                     .animation(.easeInOut, value: fillFraction) // Animation der Füllung
 
-                if let text = displayText {
-                    Text(text)
-                        .font(.statusFont)
-//                        .foregroundColor(color)
-                        .foregroundStyle(Color.white)
-                        .bold()
-                }
-
                 if let symbol = symbol {
                     Image(systemName: symbol)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 20, height: 20) // Größe des Symbols im Kreis
-                        .foregroundColor(color)
+                        .frame(width: symbolSize, height: symbolSize)
+                        .foregroundColor(color) // Symbolfarbe
+                }
+
+                if let displayText = displayText {
+                    let numberText = displayText.replacingOccurrences(of: "U", with: "") // Entferne das "U"
+
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text(numberText)
+                            .font(.system(size: 16)) // Originalgröße für die Zahl
+                            .bold()
+                            .foregroundColor(.white)
+
+                        Text("U")
+                            .font(.system(size: 14)) // Kleinere Größe für das "U"
+                            .foregroundColor(.white)
+                    }
                 }
             }
-            .frame(width: 40, height: 40) // Größe des Kreises
+            .frame(width: 54, height: 54)
         }
     }
 
     var body: some View {
         HStack(spacing: 8) {
-            // Reservoir-Anzeige
             if let reservoir = reservoir {
                 let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
@@ -90,21 +97,20 @@ struct PumpView: View {
 
                 FillableCircle(
                     fillFraction: fill,
-                    color: reservoirColor,
+                    color: reservoirColor, // Farbe des Rings
                     opacity: 1.0,
-                    displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" : reservoirFormatter
-                        .string(from: reservoir as NSNumber),
+                    displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
+                        "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
                     symbol: nil // Kein Symbol für die Reservoir-Anzeige
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
             } else {
-                Text("No Pump").font(.subheadline)
+                Text("No Pump")
+                    .font(.system(size: 16))
                     .foregroundStyle(.white)
-                    .foregroundColor(.white)
                     .offset(x: -22, y: 0)
             }
-
             // Batterieanzeige
             if let battery = battery, !state.pumpName.contains("Omni") {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
@@ -119,7 +125,8 @@ struct PumpView: View {
                     color: batteryColor,
                     opacity: 1.0,
                     displayText: nil, // Kein Text für die Batterieanzeige
-                    symbol: batterySymbol // Batteriesymbol hinzufügen
+                    symbol: batterySymbol,
+                    symbolSize: 26
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
@@ -194,7 +201,7 @@ struct PumpView: View {
         case ...30:
             return .yellow
         default:
-            return .blue
+            return .green
         }
     }
 

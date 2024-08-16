@@ -7,34 +7,6 @@ struct LoopView: View {
         static let lag: TimeInterval = 30
     }
 
-    struct LoopCapsule: View {
-        var stroke: Color
-        var gradient: [Color] // Farben für den Farbverlauf
-
-        var body: some View {
-            Capsule()
-                .fill(LinearGradient(
-                    gradient: Gradient(colors: gradient),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )) // Fülle die Kapsel mit einem Farbverlauf
-                .overlay(
-                    Capsule().stroke(stroke, lineWidth: 0) // Zeichne den Rand der Kapsel
-                )
-                .shadow(color: .white, radius: 1, x: 0, y: 1) // Hier wird der weiße Schatten hinzugefügt
-        }
-    }
-
-    private var gradientColors: [Color] {
-        if isLooping {
-            return [.black, .purple]
-        } else if closedLoop {
-            return [.purple, .black]
-        } else {
-            return [.red]
-        }
-    }
-
     @Binding var suggestion: Suggestion?
     @Binding var enactedSuggestion: Suggestion?
     @Binding var closedLoop: Bool
@@ -43,18 +15,17 @@ struct LoopView: View {
     @Binding var lastLoopDate: Date
     @Binding var manualTempBasal: Bool
 
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.sizeCategory) private var fontSize
+
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter
     }
 
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.sizeCategory) private var fontSize
-
     // Berechne die Füllfarbe basierend auf deinen Bedingungen
     private var fillColor: Color {
-        // Implementiere die Logik zur Bestimmung der Füllfarbe
         if isLooping {
             return .blue // Beispiel: Fülle mit Blau, wenn Looping
         } else if closedLoop {
@@ -66,38 +37,52 @@ struct LoopView: View {
 
     var body: some View {
         VStack {
-            HStack(spacing: 10) { // Verwende HStack mit Abstand zwischen den Elementen
-                LoopCapsule(stroke: color, gradient: gradientColors)
-                    .frame(width: 70, height: 30) // Setzt die Größe der Kapsel auf 70 x 30
-                    .overlay {
-                        let textColor: Color = .white
-                        HStack {
-                            ZStack {
-                                if closedLoop {
-                                    if !isLooping, actualSuggestion?.timestamp != nil {
-                                        if minutesAgo > 1440 {
-                                            Text("--").font(.loopFont).foregroundColor(textColor).padding(.leading, 5)
-                                        } else {
-                                            let timeString = "\(minutesAgo) " +
-                                                NSLocalizedString("min", comment: "Minutes ago since last loop")
-                                            Text(timeString).font(.loopFont).foregroundColor(textColor)
-                                        }
-                                    }
-                                    if isLooping {
-                                        ProgressView()
-                                    }
-                                } else if !isLooping {
-                                    Text("Open").font(.loopFont)
-                                }
+            ZStack {
+                Circle()
+                    .stroke(lineWidth: 4)
+                    .foregroundColor(color)
+                    .frame(width: 54, height: 54)
+
+                VStack(spacing: 5) {
+                    if closedLoop {
+                        if !isLooping, actualSuggestion?.timestamp != nil {
+                            if minutesAgo > 1440 {
+                                Text("--")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 5)
+                            } else {
+                                let timeString = "\(minutesAgo) " +
+                                    NSLocalizedString("min", comment: "Minutes ago since last loop")
+                                Text(timeString)
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
                             }
                         }
+                    } else if !isLooping {
+                        Text("Open")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white)
                     }
+                }
+                .offset(y: 0) // Text nach oben verschieben
 
-                Circle()
-                    .fill(color)
-                    .frame(width: 10, height: 10)
+                if isLooping {
+                    ProgressView() // Zeigt die Fortschrittsanzeige an, wenn isLooping aktiv ist
+                        .progressViewStyle(CircularProgressViewStyle(tint: color))
+                        .frame(width: 30, height: 30)
+                }
             }
-            // .padding() // Optional: Füge Padding hinzu, um den HStack vom Rand zu entfernen
+        }
+    }
+
+    private var gradientColors: [Color] {
+        if isLooping {
+            return [.black, .purple]
+        } else if closedLoop {
+            return [.purple, .black]
+        } else {
+            return [.red]
         }
     }
 

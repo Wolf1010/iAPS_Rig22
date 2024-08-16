@@ -489,7 +489,7 @@ Enact a temp Basal or a temp target */
 "/U" = "/IE";
 
 /* Insulin unit */
-"U" = " IE";
+"U" = "IE";
 
 /* Unit per hour with space */
 " U/hr" = "IE/h";

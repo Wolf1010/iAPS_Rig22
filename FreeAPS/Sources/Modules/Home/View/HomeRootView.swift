@@ -48,6 +48,8 @@ extension Home {
             sortDescriptors: [NSSortDescriptor(key: "date", ascending: false)]
         ) var enactedSliderTT: FetchedResults<TempTargetsSlider>
 
+        @State private var progress: Double = 0.0 // Fortschrittswert als State-Variable
+
         private var numberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -59,6 +61,8 @@ extension Home {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
             formatter.maximumFractionDigits = 1
+            formatter.minimumFractionDigits = 0 // Keine unnötigen Nullen
+            formatter.locale = Locale(identifier: "de_DE_POSIX") // Standard-Format ohne Leerzeichen
             return formatter
         }
 
@@ -155,7 +159,7 @@ extension Home {
                         .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
                         .animation(.easeInOut, value: fillFraction) // Animation der Füllung
                 }
-                .frame(width: 40, height: 40) // Größe des Kreises
+                .frame(width: 54, height: 54) // Größe des Kreises
             }
         }
 
@@ -172,24 +176,22 @@ extension Home {
                             let fill = max(min(fraction, 1.0), 0.0)
 
                             FillableCircle(fillFraction: fill, color: .loopYellow, opacity: opacity)
-                                .frame(width: 40, height: 40) // Feste Größe für den Kreis
                                 .padding(.trailing, 8) // Abstand zum Text
                                 .layoutPriority(1) // Priorität für das Layout
 
-                            HStack(spacing: 4) {
+                            HStack(spacing: 0) { // Kein Abstand für COB
                                 Text(
                                     numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
                                 )
-                                .font(.statusFont)
+                                .font(.system(size: 16))
                                 .bold()
                                 .foregroundColor(.white)
-                                //   .fixedSize(horizontal: true, vertical: false) // Verhindert das Ausdehnen
-                                .offset(x: -4, y: -35)
 
-                                /*                              Text(NSLocalizedString(" g", comment: "gram of carbs"))
-                                 .font(.statusFont)
-                                 .foregroundColor(.white)*/
+                                Text(NSLocalizedString("g", comment: "gram of carbs"))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
                             }
+                            .offset(x: -3, y: -44) // Zentrierung in der Mitte
                         }
 
                         VStack {
@@ -199,24 +201,21 @@ extension Home {
                             let fill = max(min(fraction, 1.0), 0.0)
 
                             FillableCircle(fillFraction: fill, color: substance < 0 ? .blue : .insulin, opacity: 1.0)
-                                .frame(width: 40, height: 40) // Feste Größe für den Kreis
                                 .padding(.trailing, 8) // Abstand zum Text
                                 .layoutPriority(1) // Priorität für das Layout
 
-                            HStack(spacing: 4) {
+                            HStack(spacing: 0) { // Kein Abstand für IOB
                                 Text(
                                     insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
                                 )
-                                .font(.statusFont)
+                                .font(.system(size: 16))
                                 .bold()
                                 .foregroundColor(.white)
-                                // .fixedSize(horizontal: true, vertical: false) // Verhindert das Ausdehnen
-                                .offset(x: -4, y: -36)
-
-                                /*                               Text(NSLocalizedString(" U", comment: "Insulin unit"))
-                                 .font(.statusFont)
-                                 .foregroundColor(.white)*/
+                                Text(NSLocalizedString("U", comment: "Insulin unit"))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
                             }
+                            .offset(x: -3, y: -44) // Zentrierung in der Mitte
                         }
                     }
                     .padding(.horizontal, 5) // Polsterung innerhalb des HStacks
@@ -387,7 +386,7 @@ extension Home {
                     maxBolusValue: $state.maxBolusValue, useInsulinBars: $state.useInsulinBars
                 )
             }
-            .padding(.bottom, 15)
+            .padding(.bottom, 50)
             .modal(for: .dataTable, from: self)
         }
 
@@ -399,7 +398,7 @@ extension Home {
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .frame(height: 50 + geo.safeAreaInsets.bottom)
+                .frame(height: 60 + geo.safeAreaInsets.bottom)
                 let isOverride = fetchedPercent.first?.enabled ?? false
                 let isTarget = (state.tempTarget != nil)
                 HStack {
@@ -453,7 +452,7 @@ extension Home {
                             .font(.custom("Buttons", size: 24))
                             .foregroundStyle(.white)
                             .padding(8)
-                            .background(isOverride ? .blue.opacity(0.25) : .clear)
+                            .background(isOverride ? .blue.opacity(0.5) : .clear)
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                     }
                     .onTapGesture {
@@ -644,9 +643,10 @@ extension Home {
                         }
                         .frame(width: 300, height: 30)
                         VStack {
-                            ProgressView(value: Double(progress))
+                            ProgressView(value: Double(truncating: progress as NSNumber))
                                 .progressViewStyle(BolusProgressViewStyle())
-                                .offset(x: 16, y: -3) }
+                                .offset(x: 16, y: -3)
+                        }
                     }
                     Image(systemName: "xmark.circle")
                         .font(.system(size: 20))
@@ -656,10 +656,22 @@ extension Home {
             }
         }
 
+        // Beispiel-Logik zur Simulation des Fortschritts
+        private func startProgress() {
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                withAnimation {
+                    progress += 0.01 // Fortschritt in kleinen Schritten erhöhen
+                }
+                if progress >= 1.0 {
+                    timer.invalidate()
+                }
+            }
+        }
+
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addHeaderBackground()
                 .frame(
-                    maxHeight: fontSize < .extraExtraLarge ? 210 + geo.safeAreaInsets.top : 135 + geo
+                    maxHeight: fontSize < .extraExtraLarge ? 240 + geo.safeAreaInsets.top : 135 + geo
                         .safeAreaInsets.top
                 )
                 .overlay {
@@ -675,8 +687,8 @@ extension Home {
                                 carbsAndInsulinView
                                     .frame(maxHeight: .infinity, alignment: .bottom)
                                 Spacer()
-                                loopView.frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 3)
-                                    .offset(x: -2, y: 0) // To do: Remove all offsets, if possible.
+                                loopView.frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 5)
+                                    .offset(x: -4)
                                 Spacer()
                                 pumpView
                                     .frame(maxHeight: .infinity, alignment: .bottom)
@@ -834,17 +846,13 @@ extension Home {
                     }
                 }
             }
-            .onAppear(perform: configureView)
+            .onAppear(perform: startProgress) // Startet den Fortschritt, wenn die Ansicht erscheint
             .navigationTitle("Home")
             .navigationBarHidden(true)
             .ignoresSafeArea(.keyboard)
             .popup(isPresented: state.isStatusPopupPresented, alignment: .center, direction: .bottom) {
                 popup
                     .padding(10)
-//                    .background(
-//                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-//                            .fill(Color.black)
-//                    )
                     .shadow(color: .white, radius: 5, x: 0, y: 0)
                     .cornerRadius(10)
                     .onTapGesture {
@@ -889,7 +897,7 @@ extension Home {
             .padding()
             .background(Color.black)
             .cornerRadius(10)
-            .shadow(radius: 10)
+            .shadow(radius: 5)
         }
     }
 }
