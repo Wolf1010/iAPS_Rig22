@@ -122,7 +122,7 @@ struct PumpView: View {
 
                 FillableCircle(
                     fillFraction: batteryFill,
-                    color: batteryColor,
+                    color: reservoirColor,
                     opacity: 1.0,
                     displayText: nil, // Kein Text für die Batterieanzeige
                     symbol: batterySymbol,
@@ -183,10 +183,10 @@ struct PumpView: View {
         switch percent {
         case ...25:
             return .red
-        case ...50:
+        case ...49:
             return .yellow
         default:
-            return .loopGreen
+            return .green
         }
     }
 

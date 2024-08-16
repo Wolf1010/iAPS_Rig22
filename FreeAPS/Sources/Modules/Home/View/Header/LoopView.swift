@@ -24,17 +24,6 @@ struct LoopView: View {
         return formatter
     }
 
-    // Berechne die Füllfarbe basierend auf deinen Bedingungen
-    private var fillColor: Color {
-        if isLooping {
-            return .blue // Beispiel: Fülle mit Blau, wenn Looping
-        } else if closedLoop {
-            return .purple // Beispiel: Fülle mit Grün, wenn geschlossen
-        } else {
-            return .gray // Beispiel: Fülle mit Grau, wenn offen
-        }
-    }
-
     var body: some View {
         VStack {
             ZStack {
@@ -104,7 +93,7 @@ struct LoopView: View {
             guard actualSuggestion?.deliverAt != nil else {
                 return .loopYellow
             }
-            return .loopGreen
+            return .green
         } else if delta <= 12.minutes.timeInterval {
             return .loopYellow
         } else {
