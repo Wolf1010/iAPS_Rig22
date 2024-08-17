@@ -40,51 +40,73 @@ struct PumpView: View {
         return dateFormatter
     }
 
-    struct FillableCircle: View {
+    struct PieSegment: View {
         var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
         var color: Color // Farbe der Füllung
-        var opacity: CGFloat // Transparenz des Hintergrundkreises
-        var displayText: String? // Text, der im Kreis angezeigt wird
-        var symbol: String? // Symbol, das im Kreis angezeigt wird
+        var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
+        var displayText: String? // Text, der unter dem Segment angezeigt wird
+        var symbol: String? // Symbol, das im Segment angezeigt wird
         var symbolSize: CGFloat = 20 // Symbolgröße, Standardgröße ist 20
 
         var body: some View {
-            ZStack {
-                Circle()
-                    .stroke(lineWidth: 3)
-                    .opacity(Double(opacity))
-                    .foregroundColor(color.opacity(0.4)) // Hintergrund des Kreises
+            VStack(spacing: 2) {
+                ZStack {
+                    // Hintergrundkreis
+                    Circle()
+                        .fill(backgroundColor) // Hintergrundfarbe
+                        .opacity(0.3) // Beispiel: 30% Deckkraft
+                        .frame(width: 54, height: 54) // Gleiche Größe wie der Pie-Segment
 
-                Circle()
-                    .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
-                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
-                    .animation(.easeInOut, value: fillFraction) // Animation der Füllung
+                    // Gefüllter Pie-Slice
+                    PieSliceView(
+                        startAngle: .degrees(-90.0),
+                        endAngle: .degrees(-90.0 + Double(360.0 * fillFraction))
+                    )
+                    .fill(color)
+                    .animation(.easeInOut, value: fillFraction)
 
-                if let symbol = symbol {
-                    Image(systemName: symbol)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: symbolSize, height: symbolSize)
-                        .foregroundColor(color) // Symbolfarbe
-                }
-
-                if let displayText = displayText {
-                    let numberText = displayText.replacingOccurrences(of: "U", with: "") // Entferne das "U"
-
-                    HStack(alignment: .firstTextBaseline, spacing: 0) {
-                        Text(numberText)
-                            .font(.system(size: 16)) // Originalgröße für die Zahl
-                            .bold()
-                            .foregroundColor(.white)
-
-                        Text("U")
-                            .font(.system(size: 14)) // Kleinere Größe für das "U"
-                            .foregroundColor(.white)
+                    // Symbol im Pie-Segment
+                    if let symbol = symbol {
+                        Image(systemName: symbol)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: symbolSize, height: symbolSize)
+                            .foregroundColor(.white) // Farbe des Symbols
                     }
                 }
+                .frame(width: 54, height: 54)
+                .offset(y: 23)
+
+                // Optionaler Text unterhalb des Pie-Segments
+                if let displayText = displayText {
+                    Text(displayText) // Kein zusätzliches "U" hier
+                        .font(.system(size: 16)) // Originalgröße für die Zahl
+                        .bold()
+                        .foregroundColor(.white)
+                        .offset(y: 25) // Der Wert hier schiebt carbsandinsulin nach oben und unten
+                }
             }
-            .frame(width: 54, height: 54)
+            .frame(width: 54)
+        }
+    }
+
+    struct PieSliceView: Shape {
+        var startAngle: Angle
+        var endAngle: Angle
+
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            let center = CGPoint(x: rect.midX, y: rect.midY)
+            path.move(to: center)
+            path.addArc(
+                center: center,
+                radius: rect.width / 2,
+                startAngle: startAngle,
+                endAngle: endAngle,
+                clockwise: false
+            )
+            path.closeSubpath()
+            return path
         }
     }
 
@@ -94,14 +116,14 @@ struct PumpView: View {
                 let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
+                let reservoirSymbol = "square.split.1x2"
 
-                FillableCircle(
+                PieSegment(
                     fillFraction: fill,
-                    color: reservoirColor, // Farbe des Rings
-                    opacity: 1.0,
+                    color: reservoirColor, backgroundColor: .gray, // Farbe des aktuellen Standes
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
-                    symbol: nil // Kein Symbol für die Reservoir-Anzeige
+                    symbol: reservoirSymbol // Symbol für die Reservoir-Anzeige
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
@@ -115,17 +137,16 @@ struct PumpView: View {
             if let battery = battery, !state.pumpName.contains("Omni") {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
-                let percent = (battery.percent ?? 100) > 80 ? 100 : (battery.percent ?? 100) < 81 &&
-                    (battery.percent ?? 100) >
-                    60 ? 75 : (battery.percent ?? 100) < 61 && (battery.percent ?? 100) > 40 ? 50 : 25
-                let batterySymbol = "battery.\(percent)" // Symbol basierend auf Batterieprozentsatz
+                // Der Prozentsatz direkt hier als Text
+                let batteryText = "\(Int(batteryFraction * 100))%"
+                let batterySymbol = "battery.0percent"
 
-                FillableCircle(
+                PieSegment(
                     fillFraction: batteryFill,
                     color: batteryColor,
-                    opacity: 1.0,
-                    displayText: nil, // Kein Text für die Batterieanzeige
-                    symbol: batterySymbol,
+                    backgroundColor: .gray,
+                    displayText: batteryText, // Prozentsatz als Text
+                    symbol: batterySymbol, // Symbol für die Batterieanzeige
                     symbolSize: 26
                 )
                 .padding(.trailing, 8)
@@ -134,19 +155,22 @@ struct PumpView: View {
 
             // Anzeige des Ablaufdatums
             if let date = expiresAtDate {
-                Image("pod_reservoir")
-                    .resizable(resizingMode: .stretch)
-                    .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
-                    .foregroundColor(colorScheme == .dark ? .secondary : .white)
-                    .offset(x: 0, y: -5)
-                    .overlay {
-                        if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
-                            ClockOffset(mdtPump: false)
+                VStack {
+                    Image("pod_reservoir")
+                        .resizable(resizingMode: .stretch)
+                        .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
+                        .foregroundColor(colorScheme == .dark ? .secondary : .white)
+                        .offset(x: 0, y: -5)
+                        .overlay {
+                            if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
+                                ClockOffset(mdtPump: false)
+                            }
                         }
-                    }
-                remainingTime(time: date.timeIntervalSince(timerDate))
-                    .font(.pumpFont)
-                    .offset(x: -7, y: 0)
+
+                    remainingTime(time: date.timeIntervalSince(timerDate))
+                        .font(.pumpFont)
+                        .offset(x: -7, y: 0)
+                }
             } else if state.pumpName.contains("Omni") {
                 Text("No Pod").font(.subheadline).foregroundStyle(.secondary)
                     .offset(x: 0, y: -4)

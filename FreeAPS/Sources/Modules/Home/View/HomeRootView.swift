@@ -141,25 +141,95 @@ extension Home {
             }
         }
 
-        struct FillableCircle: View {
+        /*        struct FillableCircle: View {
+             var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
+             var color: Color // Farbe der Füllung
+             var opacity: CGFloat // Transparenz des Hintergrundkreises
+
+             var body: some View {
+                 ZStack {
+                     Circle()
+                         .stroke(lineWidth: 3)
+                         .opacity(Double(opacity))
+                         .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
+
+                     Circle()
+                         .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
+                         .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                         .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
+                         .animation(.easeInOut, value: fillFraction) // Animation der Füllung
+                 }
+                 .frame(width: 54, height: 54) // Größe des Kreises
+             }
+         }*/
+
+        var pumpView: some View {
+            PumpView(
+                reservoir: $state.reservoir,
+                battery: $state.battery,
+                name: $state.pumpName,
+                expiresAtDate: $state.pumpExpiresAtDate,
+                timerDate: $state.timerDate, timeZone: $state.timeZone,
+                state: state
+            )
+            .onTapGesture {
+                if state.pumpDisplayState != nil {
+                    state.setupPump = true
+                }
+            }
+        }
+
+        struct FillablePieSegment: View {
             var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
             var color: Color // Farbe der Füllung
-            var opacity: CGFloat // Transparenz des Hintergrundkreises
+            var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
+            var displayText: String? // Text, der unter dem Segment angezeigt wird
 
             var body: some View {
-                ZStack {
-                    Circle()
-                        .stroke(lineWidth: 3)
-                        .opacity(Double(opacity))
-                        .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
+                VStack {
+                    ZStack {
+                        Circle()
+                            .fill(backgroundColor)
+                            .opacity(0.3)
+                            .frame(width: 54, height: 54)
 
-                    Circle()
-                        .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
-                        .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                        .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
-                        .animation(.easeInOut, value: fillFraction) // Animation der Füllung
+                        PieSliceView(
+                            startAngle: .degrees(-90),
+                            endAngle: .degrees(-90 + Double(360.0 * fillFraction))
+                        )
+                        .fill(color)
+                        .animation(.easeInOut, value: fillFraction)
+
+                        if let displayText = displayText {
+                            Text(displayText)
+                                .font(.system(size: 16))
+                                .bold()
+                                .foregroundColor(.white)
+                                .offset(y: 42) // Der Wert hier schiebt carbsandinsulin nach oben und unten
+                        }
+                    }
+                    .frame(width: 54, height: 54)
                 }
-                .frame(width: 54, height: 54) // Größe des Kreises
+            }
+        }
+
+        struct PieSliceView: Shape {
+            var startAngle: Angle
+            var endAngle: Angle
+
+            func path(in rect: CGRect) -> Path {
+                var path = Path()
+                let center = CGPoint(x: rect.midX, y: rect.midY)
+                path.move(to: center)
+                path.addArc(
+                    center: center,
+                    radius: rect.width / 2,
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    clockwise: false
+                )
+                path.closeSubpath()
+                return path
             }
         }
 
@@ -175,11 +245,9 @@ extension Home {
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
 
-                            FillableCircle(fillFraction: fill, color: .loopYellow, opacity: opacity)
-                                .padding(.trailing, 8) // Abstand zum Text
-                                .layoutPriority(1) // Priorität für das Layout
+                            FillablePieSegment(fillFraction: fill, color: .loopYellow, backgroundColor: .gray, displayText: "20g")
 
-                            HStack(spacing: 0) { // Kein Abstand für COB
+                            HStack(spacing: 0) {
                                 Text(
                                     numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
                                 )
@@ -191,7 +259,7 @@ extension Home {
                                     .font(.system(size: 14))
                                     .foregroundColor(.white)
                             }
-                            .offset(x: -3, y: -44) // Zentrierung in der Mitte
+                            .offset(y: 20)
                         }
 
                         VStack {
@@ -200,11 +268,14 @@ extension Home {
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
 
-                            FillableCircle(fillFraction: fill, color: substance < 0 ? .blue : .insulin, opacity: 1.0)
-                                .padding(.trailing, 8) // Abstand zum Text
-                                .layoutPriority(1) // Priorität für das Layout
+                            FillablePieSegment(
+                                fillFraction: fill,
+                                color: substance < 0 ? .blue : .insulin,
+                                backgroundColor: .gray,
+                                displayText: "2.6U"
+                            )
 
-                            HStack(spacing: 0) { // Kein Abstand für IOB
+                            HStack(spacing: 0) {
                                 Text(
                                     insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
                                 )
@@ -215,26 +286,10 @@ extension Home {
                                     .font(.system(size: 14))
                                     .foregroundColor(.white)
                             }
-                            .offset(x: -3, y: -44) // Zentrierung in der Mitte
+                            .offset(y: 20)
                         }
                     }
-                    .padding(.horizontal, 5) // Polsterung innerhalb des HStacks
-                }
-            }
-        }
-
-        var pumpView: some View {
-            PumpView(
-                reservoir: $state.reservoir,
-                battery: $state.battery,
-                name: $state.pumpName,
-                expiresAtDate: $state.pumpExpiresAtDate,
-                timerDate: $state.timerDate, timeZone: $state.timeZone,
-                state: state
-            )
-            .onTapGesture {
-                if state.pumpDisplayState != nil {
-                    state.setupPump = true
+                    .padding(.horizontal, 5)
                 }
             }
         }
@@ -740,7 +795,8 @@ extension Home {
                     y: .value("Glucose", Double($0.glucose ?? 0) * (state.units == .mmolL ? 0.0555 : 1.0))
                 )
                 .foregroundStyle(
-                    (($0.glucose ?? 0) > veryHigh || Decimal($0.glucose ?? 0) < low) ? Color(.red) : Decimal($0.glucose ?? 0) >
+                    (($0.glucose ?? 0) > veryHigh || Decimal($0.glucose ?? 0) < low) ? Color(.red) :
+                        Decimal($0.glucose ?? 0) >
                         high ? Color(.yellow) : Color(.darkGreen)
                 )
                 .symbolSize(7)
@@ -758,7 +814,8 @@ extension Home {
                 AxisMarks(values: .automatic(desiredCount: 3))
             }
             .chartYScale(
-                domain: minimumRange * (state.units == .mmolL ? 0.0555 : 1.0) ... maximum * (state.units == .mmolL ? 0.0555 : 1.0)
+                domain: minimumRange * (state.units == .mmolL ? 0.0555 : 1.0) ... maximum *
+                    (state.units == .mmolL ? 0.0555 : 1.0)
             )
             .chartXScale(
                 domain: Date.now.addingTimeInterval(-1.days.timeInterval) ... Date.now
@@ -890,8 +947,10 @@ extension Home {
                         .padding(.top, 8)
                     Text(errorMessage).font(.suggestionError).fontWeight(.semibold).foregroundColor(.orange)
                 } else if let suggestion = state.suggestion, (suggestion.bg ?? 100) == 400 {
-                    Text("Invalid CGM reading (HIGH).").font(.suggestionError).bold().foregroundColor(.loopRed).padding(.top, 8)
-                    Text("SMBs and High Temps Disabled.").font(.suggestionParts).foregroundStyle(Color.white).padding(.bottom, 4)
+                    Text("Invalid CGM reading (HIGH).").font(.suggestionError).bold().foregroundColor(.loopRed)
+                        .padding(.top, 8)
+                    Text("SMBs and High Temps Disabled.").font(.suggestionParts).foregroundStyle(Color.white)
+                        .padding(.bottom, 4)
                 }
             }
             .padding()
