@@ -51,13 +51,13 @@ struct PumpView: View {
         var body: some View {
             ZStack {
                 Circle()
-                    .stroke(lineWidth: 4)
+                    .stroke(lineWidth: 3)
                     .opacity(Double(opacity))
                     .foregroundColor(color.opacity(0.4)) // Hintergrund des Kreises
 
                 Circle()
                     .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
-                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                     .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
                     .animation(.easeInOut, value: fillFraction) // Animation der Füllung
 
@@ -122,7 +122,7 @@ struct PumpView: View {
 
                 FillableCircle(
                     fillFraction: batteryFill,
-                    color: reservoirColor,
+                    color: batteryColor,
                     opacity: 1.0,
                     displayText: nil, // Kein Text für die Batterieanzeige
                     symbol: batterySymbol,

@@ -15,7 +15,7 @@ public struct BolusProgressViewStyle: ProgressViewStyle {
                 RoundedRectangle(cornerRadius: 6)
                     .fill(
                         LinearGradient(
-                            gradient: Gradient(colors: [Color.blue, Color.purple]),
+                            gradient: Gradient(colors: [Color.blue, Color.blueComplicationBackground]),
                             startPoint: .leading,
                             endPoint: .trailing
                         )

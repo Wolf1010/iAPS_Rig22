@@ -9,7 +9,7 @@ struct CurrentGlucoseView: View {
     @Binding var lowGlucose: Decimal
     @Binding var highGlucose: Decimal
 
-    /*    @State private var rotationDegrees: Double = 0.0
+    /* @State private var rotationDegrees: Double = 0.0
      @State private var angularGradient = AngularGradient(colors: [
          // 184, 87, 255
          // 159, 108, 250
@@ -27,10 +27,9 @@ struct CurrentGlucoseView: View {
     @State private var rotationDegrees: Double = 0.0
     @State private var angularGradient = AngularGradient(colors: [
         Color(red: 0.175, green: 0.588, blue: 0.754),
-        Color(red: 0.175, green: 0.588, blue: 0.754),
-        Color(red: 0.175, green: 0.588, blue: 0.754),
-        Color(red: 0.175, green: 0.588, blue: 0.754),
-        Color(red: 0.175, green: 0.588, blue: 0.754),
+        Color(red: 0.145, green: 0.508, blue: 0.745),
+        Color(red: 0.145, green: 0.508, blue: 0.745),
+        Color(red: 0.118, green: 0.588, blue: 0.988),
         Color(red: 0.175, green: 0.588, blue: 0.754)
     ], center: .center, startAngle: .degrees(270), endAngle: .degrees(-90))
 
@@ -72,7 +71,7 @@ struct CurrentGlucoseView: View {
     }
 
     var body: some View {
-        let triangleColor = Color(red: 0.262745098, green: 0.7333333333, blue: 0.9137254902)
+        let triangleColor = Color(red: 0.175, green: 0.588, blue: 0.754)
 
         ZStack {
             TrendShape(gradient: angularGradient, color: triangleColor)

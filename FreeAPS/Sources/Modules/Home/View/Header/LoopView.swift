@@ -28,7 +28,7 @@ struct LoopView: View {
         VStack {
             ZStack {
                 Circle()
-                    .stroke(lineWidth: 4)
+                    .stroke(lineWidth: 3)
                     .foregroundColor(color)
                     .frame(width: 54, height: 54)
 

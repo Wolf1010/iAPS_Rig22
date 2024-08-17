@@ -149,13 +149,13 @@ extension Home {
             var body: some View {
                 ZStack {
                     Circle()
-                        .stroke(lineWidth: 4)
+                        .stroke(lineWidth: 3)
                         .opacity(Double(opacity))
                         .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
 
                     Circle()
                         .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
-                        .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                        .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                         .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
                         .animation(.easeInOut, value: fillFraction) // Animation der Füllung
                 }
@@ -801,9 +801,9 @@ extension Home {
                         ScrollViewReader { _ in
                             LazyVStack {
                                 chart
-                                if state.timeSettings { timeSetting }
-                                preview.padding(.top, state.timeSettings ? 5 : -15)
-                                loopPreview.padding(.top, 15)
+                                /*                               if state.timeSettings { timeSetting }
+                                 preview.padding(.top, state.timeSettings ? 5 : -15)*/
+                                loopPreview.padding(.top, 0)
                                 if state.iobData.count > 5 {
                                     activeCOBView.padding(.top, 15)
                                     activeIOBView.padding(.top, 15)
@@ -897,7 +897,7 @@ extension Home {
             .padding()
             .background(Color.black)
             .cornerRadius(10)
-            .shadow(radius: 5)
+            .shadow(radius: 2)
         }
     }
 }
