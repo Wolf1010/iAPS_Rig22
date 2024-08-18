@@ -55,7 +55,7 @@ struct PumpView: View {
                     Circle()
                         .fill(backgroundColor) // Hintergrundfarbe
                         .opacity(0.3) // Beispiel: 30% Deckkraft
-                        .frame(width: 54, height: 54) // Gleiche Größe wie der Pie-Segment
+                        .frame(width: 50, height: 50) // Gleiche Größe wie der Pie-Segment
 
                     // Gefüllter Pie-Slice
                     PieSliceView(
@@ -74,19 +74,19 @@ struct PumpView: View {
                             .foregroundColor(.white) // Farbe des Symbols
                     }
                 }
-                .frame(width: 54, height: 54)
+                .frame(width: 50, height: 50)
                 .offset(y: 23)
 
                 // Optionaler Text unterhalb des Pie-Segments
                 if let displayText = displayText {
                     Text(displayText) // Kein zusätzliches "U" hier
                         .font(.system(size: 16)) // Originalgröße für die Zahl
-                        .bold()
+//                        .bold()
                         .foregroundColor(.white)
                         .offset(y: 25) // Der Wert hier schiebt carbsandinsulin nach oben und unten
                 }
             }
-            .frame(width: 54)
+            .frame(width: 50)
         }
     }
 
@@ -116,7 +116,7 @@ struct PumpView: View {
                 let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
-                let reservoirSymbol = "square.split.1x2"
+                let reservoirSymbol = "drop.fill"
 
                 PieSegment(
                     fillFraction: fill,
@@ -139,7 +139,7 @@ struct PumpView: View {
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
                 // Der Prozentsatz direkt hier als Text
                 let batteryText = "\(Int(batteryFraction * 100))%"
-                let batterySymbol = "battery.0percent"
+                let batterySymbol = "battery.100percent"
 
                 PieSegment(
                     fillFraction: batteryFill,

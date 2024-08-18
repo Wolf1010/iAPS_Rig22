@@ -28,11 +28,18 @@ struct LoopView: View {
         VStack {
             ZStack {
                 Circle()
-                    .stroke(lineWidth: 3)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 54, height: 54)
+                Circle()
+                    .stroke(lineWidth: 0)
                     .foregroundColor(color)
                     .frame(width: 54, height: 54)
 
                 VStack(spacing: 5) {
+                    Circle()
+                        .fill(color)
+                        .frame(width: 6, height: 6)
+                        .offset(y: 0)
                     if closedLoop {
                         if !isLooping, actualSuggestion?.timestamp != nil {
                             if minutesAgo > 1440 {
@@ -54,12 +61,12 @@ struct LoopView: View {
                             .foregroundColor(.white)
                     }
                 }
-                .offset(y: 0) // Text nach oben verschieben
+                .offset(y: 0) // widget nach oben verschieben
 
                 if isLooping {
                     ProgressView() // Zeigt die Fortschrittsanzeige an, wenn isLooping aktiv ist
                         .progressViewStyle(CircularProgressViewStyle(tint: color))
-                        .frame(width: 30, height: 30)
+                        .frame(width: 40, height: 40)
                 }
             }
         }

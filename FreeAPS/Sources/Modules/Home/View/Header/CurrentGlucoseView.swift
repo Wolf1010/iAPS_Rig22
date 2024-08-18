@@ -204,8 +204,11 @@ struct CircleShape: View {
 
     var body: some View {
         Circle()
+            .fill(Color.gray.opacity(0.1)) // Grauer Hintergrund mit 30% Transparenz
+            .frame(width: 130, height: 130)
+        Circle()
             .stroke(gradient, lineWidth: 6)
-            .background(Circle().fill(Color("Chart")))
+//            .background(Circle().fill(Color("Chart")))
             .frame(width: 130, height: 130)
     }
 }

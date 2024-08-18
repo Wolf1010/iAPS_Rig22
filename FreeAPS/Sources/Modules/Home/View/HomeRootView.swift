@@ -184,6 +184,8 @@ extension Home {
             var color: Color // Farbe der Füllung
             var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
             var displayText: String? // Text, der unter dem Segment angezeigt wird
+            var symbolSize: CGFloat = 26 // Symbolgröße, Standardgröße ist 20
+            var symbol: String? // Symbol, das im Segment angezeigt wird
 
             var body: some View {
                 VStack {
@@ -191,7 +193,7 @@ extension Home {
                         Circle()
                             .fill(backgroundColor)
                             .opacity(0.3)
-                            .frame(width: 54, height: 54)
+                            .frame(width: 50, height: 50)
 
                         PieSliceView(
                             startAngle: .degrees(-90),
@@ -199,6 +201,15 @@ extension Home {
                         )
                         .fill(color)
                         .animation(.easeInOut, value: fillFraction)
+
+                        // Symbol im Pie-Segment
+                        if let symbol = symbol {
+                            Image(systemName: symbol)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: symbolSize, height: symbolSize)
+                                .foregroundColor(.white) // Farbe des Symbols
+                        }
 
                         if let displayText = displayText {
                             Text(displayText)
@@ -208,7 +219,7 @@ extension Home {
                                 .offset(y: 42) // Der Wert hier schiebt carbsandinsulin nach oben und unten
                         }
                     }
-                    .frame(width: 54, height: 54)
+                    .frame(width: 50, height: 50)
                 }
             }
         }
@@ -238,14 +249,21 @@ extension Home {
                 if let settings = state.settingsManager {
                     let opacity: CGFloat = colorScheme == .light ? 0.2 : 0.6
 
-                    HStack(spacing: 7) {
+                    HStack(spacing: 18) {
                         VStack {
                             let substance = Double(state.suggestion?.cob ?? 0)
                             let maxValue = max(Double(settings.preferences.maxCOB), 1)
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
+                            let carbSymbol = "fork.knife"
 
-                            FillablePieSegment(fillFraction: fill, color: .loopYellow, backgroundColor: .gray, displayText: "20g")
+                            FillablePieSegment(
+                                fillFraction: fill,
+                                color: .loopYellow,
+                                backgroundColor: .gray,
+                                displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("g", comment: "gram of carbs"))",
+                                symbol: carbSymbol // Symbol für die Reservoir-Anzeige
+                            )
 
                             HStack(spacing: 0) {
                                 Text(
@@ -267,12 +285,14 @@ extension Home {
                             let maxValue = max(Double(settings.preferences.maxIOB), 1)
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
+                            let insulinSymbol = "syringe.fill"
 
                             FillablePieSegment(
                                 fillFraction: fill,
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
-                                displayText: "2.6U"
+                                displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("U", comment: "Insulin unit"))",
+                                symbol: insulinSymbol // Symbol für die Reservoir-Anzeige
                             )
 
                             HStack(spacing: 0) {
@@ -568,8 +588,11 @@ extension Home {
         }
 
         var chart: some View {
-            let ratio = state.timeSettings ? 1.61 : 1.44
-            let ratio2 = state.timeSettings ? 1.65 : 1.51
+            //           let ratio = state.timeSettings ? 1.61 : 1.44
+            //           let ratio2 = state.timeSettings ? 1.65 : 1.51
+
+            let ratio = state.timeSettings ? 1.8 : 1.6
+            let ratio2 = state.timeSettings ? 1.9 : 1.7
 
             return addBackground()
                 .overlay {
@@ -840,8 +863,9 @@ extension Home {
             .buttonStyle(.borderless)
             .foregroundStyle(Color.white)
             .font(.timeSettingFont)
-            .padding(.vertical, 15)
+//            .padding(.vertical, -25)
             .background(TimeEllipse(characters: string.count))
+            .offset(y: -25)
         }
 
         var body: some View {
@@ -858,8 +882,8 @@ extension Home {
                         ScrollViewReader { _ in
                             LazyVStack {
                                 chart
-                                /*                               if state.timeSettings { timeSetting }
-                                 preview.padding(.top, state.timeSettings ? 5 : -15)*/
+                                if state.timeSettings { timeSetting }
+                                preview.padding(.top, state.timeSettings ? 5 : -15)
                                 loopPreview.padding(.top, 0)
                                 if state.iobData.count > 5 {
                                     activeCOBView.padding(.top, 15)
@@ -883,7 +907,7 @@ extension Home {
                         }
                     }
                     buttonPanel(geo)
-                        .frame(height: 55)
+                        .frame(height: 60)
                 }
                 .background(
                     colorScheme == .light ? .gray.opacity(IAPSconfig.backgroundOpacity * 2) : .white
@@ -910,7 +934,7 @@ extension Home {
             .popup(isPresented: state.isStatusPopupPresented, alignment: .center, direction: .bottom) {
                 popup
                     .padding(10)
-                    .shadow(color: .white, radius: 5, x: 0, y: 0)
+                    .shadow(color: .white, radius: 2, x: 0, y: 0)
                     .cornerRadius(10)
                     .onTapGesture {
                         state.isStatusPopupPresented = false
