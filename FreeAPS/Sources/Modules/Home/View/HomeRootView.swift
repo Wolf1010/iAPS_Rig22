@@ -262,7 +262,7 @@ extension Home {
                                 color: .loopYellow,
                                 backgroundColor: .gray,
                                 displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("g", comment: "gram of carbs"))",
-                                symbol: carbSymbol // Symbol für die Reservoir-Anzeige
+                                symbolSize: 26, symbol: carbSymbol
                             )
 
                             HStack(spacing: 0) {
@@ -270,7 +270,7 @@ extension Home {
                                     numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
                                 )
                                 .font(.system(size: 16))
-                                .bold()
+                                // .bold()
                                 .foregroundColor(.white)
 
                                 Text(NSLocalizedString("g", comment: "gram of carbs"))
@@ -292,7 +292,7 @@ extension Home {
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
                                 displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("U", comment: "Insulin unit"))",
-                                symbol: insulinSymbol // Symbol für die Reservoir-Anzeige
+                                symbolSize: 26, symbol: insulinSymbol
                             )
 
                             HStack(spacing: 0) {
@@ -300,7 +300,7 @@ extension Home {
                                     insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
                                 )
                                 .font(.system(size: 16))
-                                .bold()
+                                // .bold()
                                 .foregroundColor(.white)
                                 Text(NSLocalizedString("U", comment: "Insulin unit"))
                                     .font(.system(size: 14))
@@ -699,40 +699,105 @@ extension Home {
             }
         }
 
-        func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
-            ZStack {
-                HStack {
-                    VStack {
-                        HStack {
-                            Text("Bolusing")
-                                .foregroundColor(.white)
-                                .font(.subheadline)
-                                .fontWeight(.bold)
+        public struct CircularProgressViewStyle: ProgressViewStyle {
+            public func makeBody(configuration: Configuration) -> some View {
+                let progress = CGFloat(configuration.fractionCompleted ?? 0)
 
-                            let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
+                ZStack {
+                    Circle()
+                        .stroke(lineWidth: 8)
+                        .opacity(0.3)
+                        .foregroundColor(Color.gray)
 
-                            Text(
-                                bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
-                                    .formatted(.number.precision(.fractionLength(2))) +
-                                    NSLocalizedString(" U", comment: " ")
-                            )
-                            .font(.subheadline)
-                            .foregroundStyle(Color.white)
-                        }
-                        .frame(width: 300, height: 30)
-                        VStack {
-                            ProgressView(value: Double(truncating: progress as NSNumber))
-                                .progressViewStyle(BolusProgressViewStyle())
-                                .offset(x: 16, y: -3)
-                        }
-                    }
-                    Image(systemName: "xmark.circle")
-                        .font(.system(size: 20))
-                        .onTapGesture { state.cancelBolus() }
-                        .offset(x: -20, y: -8)
+                    Circle()
+                        .trim(from: 0.0, to: progress)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.blue, Color.blueComplicationBackground]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
+                        .rotationEffect(Angle(degrees: 270))
+                        .animation(.linear(duration: 0.25), value: progress)
+
+                    Text("\(Int(progress * 100))%")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .offset(x: 3)
                 }
+                .frame(width: 100, height: 100)
             }
         }
+
+        // Progressbar in rounded style
+        func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
+            ZStack {
+                VStack {
+                    Text("Bolusing")
+                        .foregroundColor(.white)
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .padding(.bottom, 10)
+
+                    let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
+
+                    Text(
+                        bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
+                            .formatted(.number.precision(.fractionLength(2))) +
+                            NSLocalizedString(" U", comment: " ")
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(Color.white)
+
+                    ProgressView(value: Double(truncating: progress as NSNumber))
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .padding(.top, 10)
+                }
+
+                Image(systemName: "xmark.circle")
+                    .font(.system(size: 20))
+                    .onTapGesture { state.cancelBolus() }
+                    .offset(x: 77, y: -89)
+            }
+        }
+
+        // Normal progressbar
+        /* func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
+             ZStack {
+                 HStack {
+                     VStack {
+                         HStack {
+                             Text("Bolusing")
+                                 .foregroundColor(.white)
+                                 .font(.subheadline)
+                                 .fontWeight(.bold)
+
+                             let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
+
+                             Text(
+                                 bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
+                                     .formatted(.number.precision(.fractionLength(2))) +
+                                     NSLocalizedString(" U", comment: " ")
+                             )
+                             .font(.subheadline)
+                             .foregroundStyle(Color.white)
+                         }
+                         .frame(width: 300, height: 30)
+                         VStack {
+                             ProgressView(value: Double(truncating: progress as NSNumber))
+                                 .progressViewStyle(BolusProgressViewStyle())
+                                 .offset(x: 16, y: -3)
+                         }
+                     }
+                     Image(systemName: "xmark.circle")
+                         .font(.system(size: 20))
+                         .onTapGesture { state.cancelBolus() }
+                         .offset(x: -20, y: -8)
+                 }
+             }
+         }*/
 
         // Beispiel-Logik zur Simulation des Fortschritts
         private func startProgress() {
@@ -919,11 +984,11 @@ extension Home {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(.black.opacity(1.0))
-                                .frame(width: 380, height: 65)
-                                .shadow(color: .white, radius: 5, x: 0, y: 0)
+                                .frame(width: 190, height: 220)
+                                .shadow(color: .white, radius: 2, x: 0, y: 0)
                             bolusProgressView(progress: progress, amount: amount)
                         }
-                        .offset(x: 0, y: -35)
+                        .offset(y: -10)
                     }
                 }
             }

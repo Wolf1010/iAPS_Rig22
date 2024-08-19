@@ -120,10 +120,10 @@ struct PumpView: View {
 
                 PieSegment(
                     fillFraction: fill,
-                    color: reservoirColor, backgroundColor: .gray, // Farbe des aktuellen Standes
+                    color: reservoirColor, backgroundColor: .gray,
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
-                    symbol: reservoirSymbol // Symbol für die Reservoir-Anzeige
+                    symbol: reservoirSymbol
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
