@@ -46,7 +46,7 @@ struct PumpView: View {
         var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
         var displayText: String? // Text, der unter dem Segment angezeigt wird
         var symbol: String? // Symbol, das im Segment angezeigt wird
-        var symbolSize: CGFloat = 20 // Symbolgröße, Standardgröße ist 20
+        var symbolSize: CGFloat = 26 // Symbolgröße, Standardgröße ist 20
 
         var body: some View {
             VStack(spacing: 2) {
@@ -54,7 +54,7 @@ struct PumpView: View {
                     // Hintergrundkreis
                     Circle()
                         .fill(backgroundColor) // Hintergrundfarbe
-                        .opacity(0.3) // Beispiel: 30% Deckkraft
+                        .opacity(0.3)
                         .frame(width: 50, height: 50) // Gleiche Größe wie der Pie-Segment
 
                     // Gefüllter Pie-Slice
@@ -64,6 +64,7 @@ struct PumpView: View {
                     )
                     .fill(color)
                     .animation(.easeInOut, value: fillFraction)
+                    .opacity(1.0)
 
                     // Symbol im Pie-Segment
                     if let symbol = symbol {
@@ -72,6 +73,7 @@ struct PumpView: View {
                             .scaledToFit()
                             .frame(width: symbolSize, height: symbolSize)
                             .foregroundColor(.white) // Farbe des Symbols
+                            .opacity(1.0)
                     }
                 }
                 .frame(width: 50, height: 50)
@@ -79,9 +81,8 @@ struct PumpView: View {
 
                 // Optionaler Text unterhalb des Pie-Segments
                 if let displayText = displayText {
-                    Text(displayText) // Kein zusätzliches "U" hier
-                        .font(.system(size: 16)) // Originalgröße für die Zahl
-//                        .bold()
+                    Text(displayText)
+                        .font(.system(size: 16))
                         .foregroundColor(.white)
                         .offset(y: 25) // Der Wert hier schiebt carbsandinsulin nach oben und unten
                 }
@@ -116,17 +117,19 @@ struct PumpView: View {
                 let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
-                let reservoirSymbol = "drop.fill"
+                let reservoirSymbol = "backpack"
 
                 PieSegment(
                     fillFraction: fill,
                     color: reservoirColor, backgroundColor: .gray,
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
-                    symbol: reservoirSymbol
+                    symbol: reservoirSymbol,
+                    symbolSize: 24
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
+                .offset(y: -10)
             } else {
                 Text("No Pump")
                     .font(.system(size: 16))
@@ -139,7 +142,7 @@ struct PumpView: View {
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
                 // Der Prozentsatz direkt hier als Text
                 let batteryText = "\(Int(batteryFraction * 100))%"
-                let batterySymbol = "battery.100percent"
+                let batterySymbol = "macpro.gen2"
 
                 PieSegment(
                     fillFraction: batteryFill,
@@ -147,10 +150,11 @@ struct PumpView: View {
                     backgroundColor: .gray,
                     displayText: batteryText, // Prozentsatz als Text
                     symbol: batterySymbol, // Symbol für die Batterieanzeige
-                    symbolSize: 26
+                    symbolSize: 24
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
+                .offset(y: -10)
             }
 
             // Anzeige des Ablaufdatums

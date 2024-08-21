@@ -60,7 +60,7 @@ extension Home {
         private var insulinnumberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
-            formatter.maximumFractionDigits = 1
+            formatter.maximumFractionDigits = 2
             formatter.minimumFractionDigits = 0 // Keine unnötigen Nullen
             formatter.locale = Locale(identifier: "de_DE_POSIX") // Standard-Format ohne Leerzeichen
             return formatter
@@ -179,47 +179,14 @@ extension Home {
             }
         }
 
-        struct FillablePieSegment: View {
-            var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
-            var color: Color // Farbe der Füllung
-            var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
-            var displayText: String? // Text, der unter dem Segment angezeigt wird
-            var symbolSize: CGFloat = 26 // Symbolgröße, Standardgröße ist 20
-            var symbol: String? // Symbol, das im Segment angezeigt wird
-
-            var body: some View {
-                VStack {
-                    ZStack {
-                        Circle()
-                            .fill(backgroundColor)
-                            .opacity(0.3)
-                            .frame(width: 50, height: 50)
-
-                        PieSliceView(
-                            startAngle: .degrees(-90),
-                            endAngle: .degrees(-90 + Double(360.0 * fillFraction))
-                        )
-                        .fill(color)
-                        .animation(.easeInOut, value: fillFraction)
-
-                        // Symbol im Pie-Segment
-                        if let symbol = symbol {
-                            Image(systemName: symbol)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: symbolSize, height: symbolSize)
-                                .foregroundColor(.white) // Farbe des Symbols
-                        }
-
-                        if let displayText = displayText {
-                            Text(displayText)
-                                .font(.system(size: 16))
-                                .bold()
-                                .foregroundColor(.white)
-                                .offset(y: 42) // Der Wert hier schiebt carbsandinsulin nach oben und unten
-                        }
-                    }
-                    .frame(width: 50, height: 50)
+        // Fortschrittsanzeige
+        private func startProgress() {
+            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                withAnimation {
+                    progress += 0.01 // Fortschritt in kleinen Schritten erhöhen
+                }
+                if progress >= 1.0 {
+                    timer.invalidate()
                 }
             }
         }
@@ -244,11 +211,159 @@ extension Home {
             }
         }
 
+        /*        struct FillablePieSegment: View {
+             @State private var progress: CGFloat = 0.0
+             var fillFraction: CGFloat
+             var color: Color
+             var backgroundColor: Color
+             var displayText: String
+             var symbolSize: CGFloat
+             var symbol: String
+             var animateProgress: Bool
+
+             var body: some View {
+                 VStack {
+                     ZStack {
+                         Circle()
+                             .fill(backgroundColor)
+                             .opacity(0.3)
+                             .frame(width: 50, height: 50)
+
+                         PieSliceView(
+                             startAngle: .degrees(-90),
+                             endAngle: .degrees(-90 + Double(progress * 360))
+                         ) // Start bei 12:00 Uhr
+                         .fill(color)
+                         .frame(width: 50, height: 50)
+
+                         Image(systemName: symbol)
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: symbolSize, height: symbolSize)
+                             .foregroundColor(.white)
+                     }
+
+                     // Text wird unterhalb des Kreises angezeigt
+                     Text(displayText)
+                         .font(.system(size: 16))
+                         .foregroundColor(.white)
+                         .padding(.top, 0) // Abstand nach oben zum Kreis
+                 }
+                 .offset(y: 9) // Verschiebt den gesamten VStack nach unten
+                 .onAppear {
+                     if animateProgress {
+                         startProgress()
+                     }
+                 }
+                 .onChange(of: fillFraction) { _ in
+                     if animateProgress {
+                         startProgress()
+                     }
+                 }
+             }
+
+             // Funktion zur Animation des Fortschritts
+             private func startProgress() {
+                 progress = 0.0
+                 let animationDuration = 0.5
+                 let steps = Int(animationDuration / 0.1)
+                 let stepAmount = fillFraction / CGFloat(steps)
+
+                 Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                     withAnimation {
+                         progress += stepAmount
+                     }
+                     if progress >= fillFraction {
+                         timer.invalidate()
+                         progress = fillFraction // Sicherstellen, dass der finale Wert korrekt ist
+                         // Fallback: Wenn fillFraction 0 ist, setze progress auf 0
+                         if fillFraction == 0 {
+                             progress = 0
+                         }
+                     }
+                 }
+             }
+         }*/
+        struct FillablePieSegment: View {
+            @State private var progress: CGFloat = 0.0
+            var fillFraction: CGFloat
+            var color: Color
+            var backgroundColor: Color
+            var displayText: String
+            var symbolSize: CGFloat
+            var symbol: String
+            var animateProgress: Bool
+
+            var body: some View {
+                VStack {
+                    ZStack {
+                        Circle()
+                            .fill(backgroundColor)
+                            .opacity(0.3)
+                            .frame(width: 50, height: 50)
+
+                        PieSliceView(startAngle: .degrees(-90), endAngle: .degrees(-90 + Double(progress * 360)))
+                            .fill(color)
+                            .frame(width: 50, height: 50)
+
+                        Image(systemName: symbol)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: symbolSize, height: symbolSize)
+                            .foregroundColor(.white)
+                    }
+
+                    Text(displayText)
+                        .font(.system(size: 16))
+                        .foregroundColor(.white)
+                        .padding(.top, 0)
+                }
+                .offset(y: 10)
+                .onAppear {
+                    updateProgress()
+                }
+                .onChange(of: fillFraction) { _ in
+                    updateProgress()
+                }
+            }
+
+            private func updateProgress() {
+                if fillFraction < 0.001 {
+                    // Bei sehr kleinem fillFraction sofort den Fortschritt auf 0 setzen
+                    progress = 0.0
+                } else if animateProgress {
+                    startProgress()
+                } else {
+                    progress = fillFraction
+                }
+            }
+
+            private func startProgress() {
+                progress = 0.0
+                let animationDuration = 0.5
+                let steps = Int(animationDuration / 0.1)
+                let stepAmount = fillFraction / CGFloat(steps)
+
+                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
+                    withAnimation {
+                        progress += stepAmount
+                    }
+                    if progress >= fillFraction || fillFraction < 0.001 {
+                        timer.invalidate()
+                        progress = fillFraction
+
+                        // Fallback: Wenn fillFraction sehr klein ist, setze progress auf 0
+                        if fillFraction < 0.001 {
+                            progress = 0
+                        }
+                    }
+                }
+            }
+        }
+
         var carbsAndInsulinView: some View {
             HStack {
                 if let settings = state.settingsManager {
-                    let opacity: CGFloat = colorScheme == .light ? 0.2 : 0.6
-
                     HStack(spacing: 18) {
                         VStack {
                             let substance = Double(state.suggestion?.cob ?? 0)
@@ -261,21 +376,21 @@ extension Home {
                                 fillFraction: fill,
                                 color: .loopYellow,
                                 backgroundColor: .gray,
-                                displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("g", comment: "gram of carbs"))",
-                                symbolSize: 26, symbol: carbSymbol
+                                displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")g",
+                                symbolSize: 26,
+                                symbol: carbSymbol,
+                                animateProgress: true
                             )
 
                             HStack(spacing: 0) {
-                                Text(
-                                    numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0"
-                                )
-                                .font(.system(size: 16))
-                                // .bold()
-                                .foregroundColor(.white)
+                                Text(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
 
                                 Text(NSLocalizedString("g", comment: "gram of carbs"))
                                     .font(.system(size: 14))
                                     .foregroundColor(.white)
+                                    .padding(.leading, -1)
                             }
                             .offset(y: 20)
                         }
@@ -285,26 +400,27 @@ extension Home {
                             let maxValue = max(Double(settings.preferences.maxIOB), 1)
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
-                            let insulinSymbol = "syringe.fill"
+                            let insulinSymbol = "syringe"
 
                             FillablePieSegment(
                                 fillFraction: fill,
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
-                                displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0") \(NSLocalizedString("U", comment: "Insulin unit"))",
-                                symbolSize: 26, symbol: insulinSymbol
+                                displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")U",
+                                symbolSize: 26,
+                                symbol: insulinSymbol,
+                                animateProgress: true
                             )
 
                             HStack(spacing: 0) {
-                                Text(
-                                    insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0"
-                                )
-                                .font(.system(size: 16))
-                                // .bold()
-                                .foregroundColor(.white)
+                                Text(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+
                                 Text(NSLocalizedString("U", comment: "Insulin unit"))
                                     .font(.system(size: 14))
                                     .foregroundColor(.white)
+                                    .padding(.leading, -1)
                             }
                             .offset(y: 20)
                         }
@@ -587,12 +703,26 @@ extension Home {
             }
         }
 
-        var chart: some View {
-            //           let ratio = state.timeSettings ? 1.61 : 1.44
-            //           let ratio2 = state.timeSettings ? 1.65 : 1.51
+        /*       var chart: some View {
+             //           let ratio = state.timeSettings ? 1.61 : 1.44
+             //           let ratio2 = state.timeSettings ? 1.65 : 1.51
 
-            let ratio = state.timeSettings ? 1.8 : 1.6
-            let ratio2 = state.timeSettings ? 1.9 : 1.7
+             let ratio = state.timeSettings ? 1.8 : 1.6
+             let ratio2 = state.timeSettings ? 1.9 : 1.7
+
+             return addBackground()
+                 .overlay {
+                     VStack(spacing: 0) {
+                         infoPanel
+                         mainChart
+                     }
+                 }
+                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
+         }*/
+        var chart: some View {
+            // Leicht erhöhte Ratios für eine moderate Verkleinerung
+            let ratio = state.timeSettings ? 1.85 : 1.65
+            let ratio2 = state.timeSettings ? 1.95 : 1.75
 
             return addBackground()
                 .overlay {
@@ -798,18 +928,6 @@ extension Home {
                  }
              }
          }*/
-
-        // Beispiel-Logik zur Simulation des Fortschritts
-        private func startProgress() {
-            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                withAnimation {
-                    progress += 0.01 // Fortschritt in kleinen Schritten erhöhen
-                }
-                if progress >= 1.0 {
-                    timer.invalidate()
-                }
-            }
-        }
 
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addHeaderBackground()
