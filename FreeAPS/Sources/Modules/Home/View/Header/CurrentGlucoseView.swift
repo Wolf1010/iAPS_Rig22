@@ -55,13 +55,13 @@ struct CurrentGlucoseView: View {
 
         let angularGradient = AngularGradient(
             gradient: Gradient(colors: [
-                Color.blueComplicationBackground,
+                //      Color.blueComplicationBackground,
                 Color.blue,
                 Color.blue,
-                Color.blueComplicationBackground,
+                //       Color.blueComplicationBackground,
                 Color.blue,
-                Color.blue,
-                Color.blueComplicationBackground
+                Color.blue
+                //      Color.blueComplicationBackground
             ]),
             center: .center,
             startAngle: .degrees(0),
@@ -220,11 +220,12 @@ struct CircleShape: View {
         ZStack {
             Circle()
                 .fill(LinearGradient(
-                    gradient: Gradient(colors: [Color.darkGray, Color.black, Color.darkGray]),
+                    gradient: Gradient(colors: [Color.darkGray, Color.darkGray, Color.darkGray]),
                     startPoint: .top,
                     endPoint: .bottom
                 ))
                 .frame(width: 130, height: 130)
+                .opacity(0.2)
 
             Circle()
                 .stroke(gradient, lineWidth: 6)

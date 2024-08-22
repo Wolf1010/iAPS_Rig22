@@ -211,79 +211,6 @@ extension Home {
             }
         }
 
-        /*        struct FillablePieSegment: View {
-             @State private var progress: CGFloat = 0.0
-             var fillFraction: CGFloat
-             var color: Color
-             var backgroundColor: Color
-             var displayText: String
-             var symbolSize: CGFloat
-             var symbol: String
-             var animateProgress: Bool
-
-             var body: some View {
-                 VStack {
-                     ZStack {
-                         Circle()
-                             .fill(backgroundColor)
-                             .opacity(0.3)
-                             .frame(width: 50, height: 50)
-
-                         PieSliceView(
-                             startAngle: .degrees(-90),
-                             endAngle: .degrees(-90 + Double(progress * 360))
-                         ) // Start bei 12:00 Uhr
-                         .fill(color)
-                         .frame(width: 50, height: 50)
-
-                         Image(systemName: symbol)
-                             .resizable()
-                             .scaledToFit()
-                             .frame(width: symbolSize, height: symbolSize)
-                             .foregroundColor(.white)
-                     }
-
-                     // Text wird unterhalb des Kreises angezeigt
-                     Text(displayText)
-                         .font(.system(size: 16))
-                         .foregroundColor(.white)
-                         .padding(.top, 0) // Abstand nach oben zum Kreis
-                 }
-                 .offset(y: 9) // Verschiebt den gesamten VStack nach unten
-                 .onAppear {
-                     if animateProgress {
-                         startProgress()
-                     }
-                 }
-                 .onChange(of: fillFraction) { _ in
-                     if animateProgress {
-                         startProgress()
-                     }
-                 }
-             }
-
-             // Funktion zur Animation des Fortschritts
-             private func startProgress() {
-                 progress = 0.0
-                 let animationDuration = 0.5
-                 let steps = Int(animationDuration / 0.1)
-                 let stepAmount = fillFraction / CGFloat(steps)
-
-                 Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                     withAnimation {
-                         progress += stepAmount
-                     }
-                     if progress >= fillFraction {
-                         timer.invalidate()
-                         progress = fillFraction // Sicherstellen, dass der finale Wert korrekt ist
-                         // Fallback: Wenn fillFraction 0 ist, setze progress auf 0
-                         if fillFraction == 0 {
-                             progress = 0
-                         }
-                     }
-                 }
-             }
-         }*/
         struct FillablePieSegment: View {
             @State private var progress: CGFloat = 0.0
             var fillFraction: CGFloat
@@ -302,9 +229,10 @@ extension Home {
                             .opacity(0.3)
                             .frame(width: 50, height: 50)
 
-                        PieSliceView(startAngle: .degrees(-90), endAngle: .degrees(-90 + Double(progress * 360)))
+                        PieSliceView(startAngle: .degrees(-92), endAngle: .degrees(-92 + Double(progress * 360)))
                             .fill(color)
                             .frame(width: 50, height: 50)
+                            .opacity(0.6)
 
                         Image(systemName: symbol)
                             .resizable()
@@ -341,7 +269,7 @@ extension Home {
             private func startProgress() {
                 progress = 0.0
                 let animationDuration = 0.5
-                let steps = Int(animationDuration / 0.1)
+                let steps = Int(animationDuration / 0.025)
                 let stepAmount = fillFraction / CGFloat(steps)
 
                 Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
@@ -865,11 +793,11 @@ extension Home {
         func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
             ZStack {
                 VStack {
-                    Text("Bolusing")
-                        .foregroundColor(.white)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .padding(.bottom, 10)
+//                    Text("Bolusing")
+//                        .foregroundColor(.white)
+//                        .font(.subheadline)
+//                        .fontWeight(.bold)
+//                        .padding(.bottom, 10)
 
                     let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
 
@@ -889,7 +817,7 @@ extension Home {
                 Image(systemName: "xmark.circle")
                     .font(.system(size: 20))
                     .onTapGesture { state.cancelBolus() }
-                    .offset(x: 77, y: -89)
+                    .offset(x: 80, y: -80)
             }
         }
 
@@ -1102,7 +1030,7 @@ extension Home {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(.black.opacity(1.0))
-                                .frame(width: 190, height: 220)
+                                .frame(width: 190, height: 190)
                                 .shadow(color: .white, radius: 2, x: 0, y: 0)
                             bolusProgressView(progress: progress, amount: amount)
                         }

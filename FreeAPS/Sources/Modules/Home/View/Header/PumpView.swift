@@ -64,7 +64,7 @@ struct PumpView: View {
                     )
                     .fill(color)
                     .animation(.easeInOut, value: fillFraction)
-                    .opacity(1.0)
+                    .opacity(0.6)
 
                     // Symbol im Pie-Segment
                     if let symbol = symbol {
@@ -72,14 +72,13 @@ struct PumpView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(width: symbolSize, height: symbolSize)
-                            .foregroundColor(.white) // Farbe des Symbols
+                            .foregroundColor(.white)
                             .opacity(1.0)
                     }
                 }
                 .frame(width: 50, height: 50)
                 .offset(y: 23)
 
-                // Optionaler Text unterhalb des Pie-Segments
                 if let displayText = displayText {
                     Text(displayText)
                         .font(.system(size: 16))
