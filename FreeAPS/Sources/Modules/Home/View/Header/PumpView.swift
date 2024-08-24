@@ -41,12 +41,12 @@ struct PumpView: View {
     }
 
     struct PieSegment: View {
-        var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
-        var color: Color // Farbe der Füllung
-        var backgroundColor: Color // Hintergrundfarbe des Pie-Segments
-        var displayText: String? // Text, der unter dem Segment angezeigt wird
-        var symbol: String? // Symbol, das im Segment angezeigt wird
-        var symbolSize: CGFloat = 26 // Symbolgröße, Standardgröße ist 20
+        var fillFraction: CGFloat
+        var color: Color
+        var backgroundColor: Color
+        var displayText: String?
+        var symbol: String?
+        var symbolSize: CGFloat = 26
 
         var body: some View {
             VStack(spacing: 2) {
@@ -124,7 +124,7 @@ struct PumpView: View {
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
                     symbol: reservoirSymbol,
-                    symbolSize: 24
+                    symbolSize: 26
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
@@ -149,7 +149,7 @@ struct PumpView: View {
                     backgroundColor: .gray,
                     displayText: batteryText, // Prozentsatz als Text
                     symbol: batterySymbol, // Symbol für die Batterieanzeige
-                    symbolSize: 24
+                    symbolSize: 26
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)

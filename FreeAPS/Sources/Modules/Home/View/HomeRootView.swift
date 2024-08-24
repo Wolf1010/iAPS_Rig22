@@ -141,28 +141,6 @@ extension Home {
             }
         }
 
-        /*        struct FillableCircle: View {
-             var fillFraction: CGFloat // Wert zwischen 0 und 1 für die Füllmenge
-             var color: Color // Farbe der Füllung
-             var opacity: CGFloat // Transparenz des Hintergrundkreises
-
-             var body: some View {
-                 ZStack {
-                     Circle()
-                         .stroke(lineWidth: 3)
-                         .opacity(Double(opacity))
-                         .foregroundColor(color.opacity(0.5)) // Hintergrund des Kreises
-
-                     Circle()
-                         .trim(from: 0.0, to: fillFraction) // Teil des Kreises, der gefüllt wird
-                         .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                         .rotationEffect(.degrees(-90)) // Start bei 12 Uhr
-                         .animation(.easeInOut, value: fillFraction) // Animation der Füllung
-                 }
-                 .frame(width: 54, height: 54) // Größe des Kreises
-             }
-         }*/
-
         var pumpView: some View {
             PumpView(
                 reservoir: $state.reservoir,
@@ -175,18 +153,6 @@ extension Home {
             .onTapGesture {
                 if state.pumpDisplayState != nil {
                     state.setupPump = true
-                }
-            }
-        }
-
-        // Fortschrittsanzeige
-        private func startProgress() {
-            Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                withAnimation {
-                    progress += 0.01 // Fortschritt in kleinen Schritten erhöhen
-                }
-                if progress >= 1.0 {
-                    timer.invalidate()
                 }
             }
         }
@@ -208,6 +174,18 @@ extension Home {
                 )
                 path.closeSubpath()
                 return path
+            }
+        }
+
+        // Fortschrittsanzeige
+        private func startProgress() {
+            Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
+                withAnimation(Animation.linear(duration: 0.02)) {
+                    progress += 0.01
+                }
+                if progress >= 1.0 {
+                    timer.invalidate()
+                }
             }
         }
 
@@ -257,7 +235,7 @@ extension Home {
 
             private func updateProgress() {
                 if fillFraction < 0.001 {
-                    // Bei sehr kleinem fillFraction sofort den Fortschritt auf 0 setzen
+                    // Bei sehr kleinem Werten sofort den Fortschritt auf 0 setzen
                     progress = 0.0
                 } else if animateProgress {
                     startProgress()
@@ -268,13 +246,14 @@ extension Home {
 
             private func startProgress() {
                 progress = 0.0
-                let animationDuration = 0.5
-                let steps = Int(animationDuration / 0.025)
+                let animationDuration = 2.5 // Animationsgeschwindigkeit
+                let steps = Int(animationDuration / 0.05)
                 let stepAmount = fillFraction / CGFloat(steps)
 
-                Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-                    withAnimation {
-                        progress += stepAmount
+                Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
+
+                    withAnimation(.easeInOut(duration: 0.02)) {
+                        progress += stepAmount / 5
                     }
                     if progress >= fillFraction || fillFraction < 0.001 {
                         timer.invalidate()
@@ -631,22 +610,6 @@ extension Home {
             }
         }
 
-        /*       var chart: some View {
-             //           let ratio = state.timeSettings ? 1.61 : 1.44
-             //           let ratio2 = state.timeSettings ? 1.65 : 1.51
-
-             let ratio = state.timeSettings ? 1.8 : 1.6
-             let ratio2 = state.timeSettings ? 1.9 : 1.7
-
-             return addBackground()
-                 .overlay {
-                     VStack(spacing: 0) {
-                         infoPanel
-                         mainChart
-                     }
-                 }
-                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
-         }*/
         var chart: some View {
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
             let ratio = state.timeSettings ? 1.85 : 1.65
@@ -661,6 +624,21 @@ extension Home {
                 }
                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
         }
+
+        /*       var chart: some View {
+             // Leicht erhöhte Ratios für eine moderate Verkleinerung der Höhe
+             let ratio = state.timeSettings ? 2.2 : 2.0
+             let ratio2 = state.timeSettings ? 2.3 : 2.1
+
+             return addBackground()
+                 .overlay {
+                     VStack(spacing: 0) {
+                         infoPanel
+                         mainChart
+                     }
+                 }
+                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
+         }*/
 
         var preview: some View {
             addBackground()
@@ -1039,6 +1017,7 @@ extension Home {
                 }
             }
             .onAppear(perform: startProgress) // Startet den Fortschritt, wenn die Ansicht erscheint
+
             .navigationTitle("Home")
             .navigationBarHidden(true)
             .ignoresSafeArea(.keyboard)

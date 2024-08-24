@@ -55,19 +55,18 @@ struct CurrentGlucoseView: View {
 
         let angularGradient = AngularGradient(
             gradient: Gradient(colors: [
-                //      Color.blueComplicationBackground,
-                Color.blue,
-                Color.blue,
-                //       Color.blueComplicationBackground,
-                Color.blue,
-                Color.blue
-                //      Color.blueComplicationBackground
+                Color.blue.opacity(0.2),
+                Color.blue.opacity(0.3),
+                Color.blue.opacity(0.4),
+                Color.blue.opacity(0.4),
+                Color.blue.opacity(0.4),
+                Color.blue.opacity(0.3),
+                Color.blue.opacity(0.2)
             ]),
             center: .center,
             startAngle: .degrees(0),
             endAngle: .degrees(360)
         )
-
         ZStack {
             // Nutze den Gradient anstelle der Farbe
             TrendShape(gradient: angularGradient, color: triangleColor)
