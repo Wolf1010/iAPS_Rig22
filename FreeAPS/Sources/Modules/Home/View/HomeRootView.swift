@@ -602,7 +602,7 @@ extension Home {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.black)
-                    .shadow(color: Color.white.opacity(0.8), radius: 2, x: 0, y: 0)
+                    .shadow(color: Color.black.opacity(0.8), radius: 6, x: 2, y: 2)
             )
             .modal(for: .dataTable, from: self)
             .padding()

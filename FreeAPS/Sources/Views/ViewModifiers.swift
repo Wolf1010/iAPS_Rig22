@@ -147,7 +147,7 @@ struct FrostedGlass: View {
      }
  } */
 extension Color {
-    static let rig22Background = Color(red: 0.03, green: 0.12, blue: 0.19) // RGB-Werte von 0 bis 1
+    static let rig22Background = Color(red: 0.08, green: 0.15, blue: 0.20) // RGB-Werte von 0 bis 1
 }
 
 struct ColouredRoundedBackground: View {
