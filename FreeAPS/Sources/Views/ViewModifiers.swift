@@ -135,15 +135,25 @@ struct FrostedGlass: View {
     }
 }
 
-struct ColouredRoundedBackground: View {
-    @Environment(\.colorScheme) var colorScheme
+/* struct ColouredRoundedBackground: View {
+     @Environment(\.colorScheme) var colorScheme
 
+     var body: some View {
+         Rectangle()
+             // RoundedRectangle(cornerRadius: 15)
+             .fill(
+                 Color.black
+             )
+     }
+ } */
+extension Color {
+    static let rig22Background = Color(red: 0.03, green: 0.12, blue: 0.19) // RGB-Werte von 0 bis 1
+}
+
+struct ColouredRoundedBackground: View {
     var body: some View {
-        Rectangle()
-            // RoundedRectangle(cornerRadius: 15)
-            .fill(
-                Color.black
-            )
+        Rectangle() // Oder RoundedRectangle, falls du die Ecken abgerundet haben möchtest
+            .fill(Color.rig22Background) // Verwende hier die Farbe deiner Wahl
     }
 }
 

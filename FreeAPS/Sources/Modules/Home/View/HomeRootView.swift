@@ -177,6 +177,70 @@ extension Home {
             }
         }
 
+        public struct CircularProgressViewStyle: ProgressViewStyle {
+            public func makeBody(configuration: Configuration) -> some View {
+                let progress = CGFloat(configuration.fractionCompleted ?? 0)
+
+                ZStack {
+                    Circle()
+                        .stroke(lineWidth: 8)
+                        .opacity(0.3)
+                        .foregroundColor(Color.gray)
+
+                    Circle()
+                        .trim(from: 0.0, to: progress)
+                        .stroke(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.insulin, Color.blue]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                        )
+                        .rotationEffect(Angle(degrees: 270))
+                        .animation(.linear(duration: 0.25), value: progress)
+
+                    Text("\(Int(progress * 100))%")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .offset(x: 3)
+                }
+                .frame(width: 100, height: 100)
+            }
+        }
+
+        // Progressbar in rounded style
+        func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
+            ZStack {
+                VStack {
+                    //                    Text("Bolusing")
+                    //                        .foregroundColor(.white)
+                    //                        .font(.subheadline)
+                    //                        .fontWeight(.bold)
+                    //                        .padding(.bottom, 10)
+
+                    let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
+
+                    Text(
+                        bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
+                            .formatted(.number.precision(.fractionLength(2))) +
+                            NSLocalizedString(" U", comment: " ")
+                    )
+                    .font(.subheadline)
+                    .foregroundStyle(Color.white)
+
+                    ProgressView(value: Double(truncating: progress as NSNumber))
+                        .progressViewStyle(CircularProgressViewStyle())
+                        .padding(.top, 10)
+                }
+
+                Image(systemName: "xmark")
+                    .font(.system(size: 16))
+                    .onTapGesture { state.cancelBolus() }
+                    .offset(x: 80, y: -80)
+            }
+        }
+
         // Fortschrittsanzeige
         private func startProgress() {
             Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
@@ -190,7 +254,9 @@ extension Home {
         }
 
         struct FillablePieSegment: View {
-            @State private var progress: CGFloat = 0.0
+//            @State private var progress: CGFloat = 0.0
+            @StateObject var state = StateModel()
+            @Binding var progress: Double // Binding Variable für progress
             var fillFraction: CGFloat
             var color: Color
             var backgroundColor: Color
@@ -207,7 +273,7 @@ extension Home {
                             .opacity(0.3)
                             .frame(width: 50, height: 50)
 
-                        PieSliceView(startAngle: .degrees(-92), endAngle: .degrees(-92 + Double(progress * 360)))
+                        PieSliceView(startAngle: .degrees(-90), endAngle: .degrees(-90 + Double(progress * 360)))
                             .fill(color)
                             .frame(width: 50, height: 50)
                             .opacity(0.6)
@@ -235,7 +301,6 @@ extension Home {
 
             private func updateProgress() {
                 if fillFraction < 0.001 {
-                    // Bei sehr kleinem Werten sofort den Fortschritt auf 0 setzen
                     progress = 0.0
                 } else if animateProgress {
                     startProgress()
@@ -268,6 +333,9 @@ extension Home {
             }
         }
 
+        @State private var carbsProgress: Double = 0.0
+        @State private var insulinProgress: Double = 0.0
+
         var carbsAndInsulinView: some View {
             HStack {
                 if let settings = state.settingsManager {
@@ -280,6 +348,7 @@ extension Home {
                             let carbSymbol = "fork.knife"
 
                             FillablePieSegment(
+                                progress: $carbsProgress, // Binding erstellen
                                 fillFraction: fill,
                                 color: .loopYellow,
                                 backgroundColor: .gray,
@@ -310,6 +379,7 @@ extension Home {
                             let insulinSymbol = "syringe"
 
                             FillablePieSegment(
+                                progress: $insulinProgress, // Binding erstellen
                                 fillFraction: fill,
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
@@ -388,7 +458,7 @@ extension Home {
                                 .font(.extraSmall).bold().foregroundStyle(Color.white)
                         } else if let tempBasalString = tempBasalString {
                             Text(tempBasalString)
-                                .font(.statusFont).bold()
+                                .font(.system(size: 14))
                                 .foregroundStyle(Color.white)
                         }
                         if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
@@ -396,7 +466,7 @@ extension Home {
                         }
                     }
                 }
-                .padding(.leading, 0)
+                .padding(.leading, 5)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
@@ -430,25 +500,68 @@ extension Home {
 
         var infoPanel: some View {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [.black, .black]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
+                addBackground()
+                /*              LinearGradient(
+                     gradient: Gradient(colors: [.rig22Background, .rig22Background]),
+                     startPoint: .top,
+                     endPoint: .bottom
+                 )*/
                 info
                     .frame(minWidth: 100, idealWidth: 200, maxWidth: 430, minHeight: 15, maxHeight: 45)
                     .padding(20)
             }
-            .frame(width: 430, height: 45) // Optional: Festlegen einer festen Größe für den gesamten ZStack
+            .frame(width: 430, height: 35) // Optional: Festlegen einer festen Größe für den gesamten ZStack
         }
 
+        /*        var mainChart: some View {
+             ZStack {
+                 LinearGradient(
+                     gradient: Gradient(colors: [.black, .black]),
+                     startPoint: .top,
+                     endPoint: .bottom
+                 )
+                 if state.animatedBackground {
+                     SpriteView(scene: spriteScene, options: [.allowsTransparency])
+                         .ignoresSafeArea()
+                         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
+                 }
+                 MainChartView(
+                     glucose: $state.glucose,
+                     isManual: $state.isManual,
+                     suggestion: $state.suggestion,
+                     tempBasals: $state.tempBasals,
+                     boluses: $state.boluses,
+                     suspensions: $state.suspensions,
+                     announcement: $state.announcement,
+                     hours: .constant(state.filteredHours),
+                     maxBasal: $state.maxBasal,
+                     autotunedBasalProfile: $state.autotunedBasalProfile,
+                     basalProfile: $state.basalProfile,
+                     tempTargets: $state.tempTargets,
+                     carbs: $state.carbs,
+                     timerDate: $state.timerDate,
+                     units: $state.units,
+                     smooth: $state.smooth,
+                     highGlucose: $state.highGlucose,
+                     lowGlucose: $state.lowGlucose,
+                     screenHours: $state.hours,
+                     displayXgridLines: $state.displayXgridLines,
+                     displayYgridLines: $state.displayYgridLines,
+                     thresholdLines: $state.thresholdLines,
+                     triggerUpdate: $triggerUpdate,
+                     overrideHistory: $state.overrideHistory,
+                     minimumSMB: $state.minimumSMB,
+                     maxBolus: $state.maxBolus,
+                     maxBolusValue: $state.maxBolusValue, useInsulinBars: $state.useInsulinBars
+                 )
+             }
+             .padding(.bottom, 50)
+             .clipShape(RoundedRectangle(cornerRadius: 15)) // Rundung anwenden
+             .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 0) // Schatten hinzufügen
+             .modal(for: .dataTable, from: self)
+         }*/
         var mainChart: some View {
             ZStack {
-                LinearGradient(
-                    gradient: Gradient(colors: [.black, .black, .black]),
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
                 if state.animatedBackground {
                     SpriteView(scene: spriteScene, options: [.allowsTransparency])
                         .ignoresSafeArea()
@@ -481,18 +594,41 @@ extension Home {
                     overrideHistory: $state.overrideHistory,
                     minimumSMB: $state.minimumSMB,
                     maxBolus: $state.maxBolus,
-                    maxBolusValue: $state.maxBolusValue, useInsulinBars: $state.useInsulinBars
+                    maxBolusValue: $state.maxBolusValue,
+                    useInsulinBars: $state.useInsulinBars
                 )
             }
-            .padding(.bottom, 50)
+            .padding(.bottom, 0)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.black)
+                    .shadow(color: Color.white.opacity(0.8), radius: 2, x: 0, y: 0)
+            )
             .modal(for: .dataTable, from: self)
+            .padding()
+        }
+
+        var chart: some View {
+            // Leicht erhöhte Ratios für eine moderate Verkleinerung
+            let ratio = state.timeSettings ? 1.78 : 1.58
+            let ratio2 = state.timeSettings ? 1.83 : 1.68
+
+            return addBackground()
+                .overlay {
+                    VStack(spacing: 0) {
+                        infoPanel
+                        mainChart
+                            .frame(width: UIScreen.main.bounds.width * 0.99) // Breite der mainChart anpassen
+                    }
+                }
+                .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
         }
 
         @ViewBuilder private func buttonPanel(_ geo: GeometryProxy) -> some View {
             ZStack {
                 addBackground()
                 LinearGradient(
-                    gradient: Gradient(colors: [.black, .blueComplicationBackground]),
+                    gradient: Gradient(colors: [.rig22Background, .rig22Background]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -503,6 +639,11 @@ extension Home {
                     Button { state.showModal(for: .addCarbs(editMode: false, override: false)) }
                     label: {
                         ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
+                            // Hintergrundkreis
+                            ////                          Circle()
+                            //                          .fill(.white) // Hintergrundfarbe
+                            //                        .opacity(0.3)
+                            //                      .frame(width: 50, height: 50) // Gleiche Größe wie der Pie-Segment
                             Image(systemName: "fork.knife")
                                 .renderingMode(.template)
                                 .font(.custom("Buttons", size: 24))
@@ -610,36 +751,6 @@ extension Home {
             }
         }
 
-        var chart: some View {
-            // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.85 : 1.65
-            let ratio2 = state.timeSettings ? 1.95 : 1.75
-
-            return addBackground()
-                .overlay {
-                    VStack(spacing: 0) {
-                        infoPanel
-                        mainChart
-                    }
-                }
-                .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
-        }
-
-        /*       var chart: some View {
-             // Leicht erhöhte Ratios für eine moderate Verkleinerung der Höhe
-             let ratio = state.timeSettings ? 2.2 : 2.0
-             let ratio2 = state.timeSettings ? 2.3 : 2.1
-
-             return addBackground()
-                 .overlay {
-                     VStack(spacing: 0) {
-                         infoPanel
-                         mainChart
-                     }
-                 }
-                 .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
-         }*/
-
         var preview: some View {
             addBackground()
                 .frame(minHeight: 200)
@@ -735,108 +846,8 @@ extension Home {
             }
         }
 
-        public struct CircularProgressViewStyle: ProgressViewStyle {
-            public func makeBody(configuration: Configuration) -> some View {
-                let progress = CGFloat(configuration.fractionCompleted ?? 0)
-
-                ZStack {
-                    Circle()
-                        .stroke(lineWidth: 8)
-                        .opacity(0.3)
-                        .foregroundColor(Color.gray)
-
-                    Circle()
-                        .trim(from: 0.0, to: progress)
-                        .stroke(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.blue, Color.blueComplicationBackground]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                        )
-                        .rotationEffect(Angle(degrees: 270))
-                        .animation(.linear(duration: 0.25), value: progress)
-
-                    Text("\(Int(progress * 100))%")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .offset(x: 3)
-                }
-                .frame(width: 100, height: 100)
-            }
-        }
-
-        // Progressbar in rounded style
-        func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
-            ZStack {
-                VStack {
-//                    Text("Bolusing")
-//                        .foregroundColor(.white)
-//                        .font(.subheadline)
-//                        .fontWeight(.bold)
-//                        .padding(.bottom, 10)
-
-                    let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
-
-                    Text(
-                        bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
-                            .formatted(.number.precision(.fractionLength(2))) +
-                            NSLocalizedString(" U", comment: " ")
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(Color.white)
-
-                    ProgressView(value: Double(truncating: progress as NSNumber))
-                        .progressViewStyle(CircularProgressViewStyle())
-                        .padding(.top, 10)
-                }
-
-                Image(systemName: "xmark.circle")
-                    .font(.system(size: 20))
-                    .onTapGesture { state.cancelBolus() }
-                    .offset(x: 80, y: -80)
-            }
-        }
-
-        // Normal progressbar
-        /* func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
-             ZStack {
-                 HStack {
-                     VStack {
-                         HStack {
-                             Text("Bolusing")
-                                 .foregroundColor(.white)
-                                 .font(.subheadline)
-                                 .fontWeight(.bold)
-
-                             let bolused = bolusProgressFormatter.string(from: (amount * progress) as NSNumber) ?? ""
-
-                             Text(
-                                 bolused + " " + NSLocalizedString("of", comment: "") + " " + amount
-                                     .formatted(.number.precision(.fractionLength(2))) +
-                                     NSLocalizedString(" U", comment: " ")
-                             )
-                             .font(.subheadline)
-                             .foregroundStyle(Color.white)
-                         }
-                         .frame(width: 300, height: 30)
-                         VStack {
-                             ProgressView(value: Double(truncating: progress as NSNumber))
-                                 .progressViewStyle(BolusProgressViewStyle())
-                                 .offset(x: 16, y: -3)
-                         }
-                     }
-                     Image(systemName: "xmark.circle")
-                         .font(.system(size: 20))
-                         .onTapGesture { state.cancelBolus() }
-                         .offset(x: -20, y: -8)
-                 }
-             }
-         }*/
-
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
-            addHeaderBackground()
+            addBackground()
                 .frame(
                     maxHeight: fontSize < .extraExtraLarge ? 240 + geo.safeAreaInsets.top : 135 + geo
                         .safeAreaInsets.top
@@ -845,7 +856,7 @@ extension Home {
                     VStack {
                         ZStack {
                             LinearGradient(
-                                gradient: Gradient(colors: [.blueComplicationBackground, .black]),
+                                gradient: Gradient(colors: [.rig22Background, .rig22Background]),
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -878,7 +889,7 @@ extension Home {
                     VStack {
                         ZStack {
                             LinearGradient(
-                                gradient: Gradient(colors: [.black, .black]),
+                                gradient: Gradient(colors: [.rig22Background, .rig22Background]),
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -952,9 +963,9 @@ extension Home {
             .buttonStyle(.borderless)
             .foregroundStyle(Color.white)
             .font(.timeSettingFont)
-//            .padding(.vertical, -25)
+            .padding(.vertical, -3)
             .background(TimeEllipse(characters: string.count))
-            .offset(y: -25)
+            //           .offset(y: -60)
         }
 
         var body: some View {
@@ -972,7 +983,7 @@ extension Home {
                             LazyVStack {
                                 chart
                                 if state.timeSettings { timeSetting }
-                                preview.padding(.top, state.timeSettings ? 5 : -15)
+                                preview.padding(.top, state.timeSettings ? 5 : -5)
                                 loopPreview.padding(.top, 0)
                                 if state.iobData.count > 5 {
                                     activeCOBView.padding(.top, 15)
@@ -981,7 +992,7 @@ extension Home {
                             }
                             .background(GeometryReader { geo in
                                 let offset = -geo.frame(in: .named(scrollSpace)).minY
-                                Color.black
+                                Color.rig22Background
                                     .preference(
                                         key: ScrollViewOffsetPreferenceKey.self,
                                         value: offset
@@ -1007,12 +1018,13 @@ extension Home {
                     if let progress = state.bolusProgress, let amount = state.bolusAmount {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(.black.opacity(1.0))
+                                // .fill(.black)
+                                .fill(Color(red: 0.15, green: 0.23, blue: 0.36, opacity: 1))
                                 .frame(width: 190, height: 190)
                                 .shadow(color: .white, radius: 2, x: 0, y: 0)
                             bolusProgressView(progress: progress, amount: amount)
                         }
-                        .offset(y: -10)
+                        .offset(y: 120)
                     }
                 }
             }

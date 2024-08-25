@@ -35,8 +35,8 @@ struct MainChartView: View {
          static let topYPadding: CGFloat = 75
          static let bottomYPadding: CGFloat = 20*/
         static let basalHeight: CGFloat = 60
-        static let topYPadding: CGFloat = 0 // Wert für die Höhe des glucosecharts
-        static let bottomYPadding: CGFloat = 20
+        static let topYPadding: CGFloat = 20 // Wert für die Höhe des glucosecharts
+        static let bottomYPadding: CGFloat = 25
         static let minAdditionalWidth: CGFloat = 150
         static let maxGlucose = 270
         static let minGlucose = 0 // 45
