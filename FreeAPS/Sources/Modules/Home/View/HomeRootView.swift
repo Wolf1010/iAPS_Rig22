@@ -1,4 +1,5 @@
 import Charts
+import Combine
 import CoreData
 import SpriteKit
 import SwiftDate
@@ -232,10 +233,19 @@ extension Home {
                 }
             }
         }
-
+        // Animation der Kuchenstück Füllung
         struct PieSliceView: Shape {
             var startAngle: Angle
             var endAngle: Angle
+            var animatableData: AnimatablePair<Double, Double> {
+                get {
+                    AnimatablePair(startAngle.degrees, endAngle.degrees)
+                }
+                set {
+                    startAngle = Angle(degrees: newValue.first)
+                    endAngle = Angle(degrees: newValue.second)
+                }
+            }
 
             func path(in rect: CGRect) -> Path {
                 var path = Path()
@@ -253,8 +263,24 @@ extension Home {
             }
         }
 
+        // Das ViewModel zur Steuerung der Animation und des Fortschritts
+        class PieSegmentViewModel: ObservableObject {
+            @Published var progress: Double = 0.0
+
+            func updateProgress(to newValue: CGFloat, animate: Bool) {
+                if animate {
+                    withAnimation(.easeInOut(duration: 2.5)) { // Beispiel: Dauer der Animation anpassen
+                        self.progress = Double(newValue)
+                    }
+                } else {
+                    progress = Double(newValue)
+                }
+            }
+        }
+
         struct FillablePieSegment: View {
-            @Binding var progress: Double // Binding Variable für progress
+            @ObservedObject var pieSegmentViewModel: PieSegmentViewModel
+
             var fillFraction: CGFloat
             var color: Color
             var backgroundColor: Color
@@ -271,10 +297,13 @@ extension Home {
                             .opacity(0.3)
                             .frame(width: 50, height: 50)
 
-                        PieSliceView(startAngle: .degrees(-90), endAngle: .degrees(-90 + Double(progress * 360)))
-                            .fill(color)
-                            .frame(width: 50, height: 50)
-                            .opacity(0.6)
+                        PieSliceView(
+                            startAngle: .degrees(-90),
+                            endAngle: .degrees(-90 + Double(pieSegmentViewModel.progress * 360))
+                        )
+                        .fill(color)
+                        .frame(width: 50, height: 50)
+                        .opacity(0.6)
 
                         Image(systemName: symbol)
                             .resizable()
@@ -290,22 +319,16 @@ extension Home {
                 }
                 .offset(y: 10)
                 .onAppear {
-                    self.progress = Double(fillFraction)
+                    pieSegmentViewModel.updateProgress(to: fillFraction, animate: animateProgress)
                 }
                 .onChange(of: fillFraction) { newValue in
-                    if animateProgress {
-                        withAnimation(.easeInOut(duration: 0.5)) {
-                            progress = Double(newValue)
-                        }
-                    } else {
-                        progress = Double(newValue)
-                    }
+                    pieSegmentViewModel.updateProgress(to: newValue, animate: true)
                 }
             }
         }
 
-        @State private var carbsProgress: Double = 0.0
-        @State private var insulinProgress: Double = 0.0
+        @StateObject private var carbsPieSegmentViewModel = PieSegmentViewModel()
+        @StateObject private var insulinPieSegmentViewModel = PieSegmentViewModel()
 
         var carbsAndInsulinView: some View {
             HStack {
@@ -319,7 +342,7 @@ extension Home {
                             let carbSymbol = "fork.knife"
 
                             FillablePieSegment(
-                                progress: $carbsProgress, // Binding erstellen
+                                pieSegmentViewModel: carbsPieSegmentViewModel, // Verwende das ViewModel hier
                                 fillFraction: fill,
                                 color: .loopYellow,
                                 backgroundColor: .gray,
@@ -328,7 +351,18 @@ extension Home {
                                 symbol: carbSymbol,
                                 animateProgress: true
                             )
-                            .padding(.bottom, 20) // Platz unter dem Segment
+
+                            HStack(spacing: 0) {
+                                Text(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+
+                                Text(NSLocalizedString("g", comment: "gram of carbs"))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, -1)
+                            }
+                            .offset(y: 20)
                         }
 
                         VStack {
@@ -339,7 +373,7 @@ extension Home {
                             let insulinSymbol = "syringe"
 
                             FillablePieSegment(
-                                progress: $insulinProgress, // Binding erstellen
+                                pieSegmentViewModel: insulinPieSegmentViewModel, // Verwende das ViewModel hier
                                 fillFraction: fill,
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
@@ -348,7 +382,18 @@ extension Home {
                                 symbol: insulinSymbol,
                                 animateProgress: true
                             )
-                            .padding(.bottom, 20) // Platz unter dem Segment
+
+                            HStack(spacing: 0) {
+                                Text(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+
+                                Text(NSLocalizedString("U", comment: "Insulin unit"))
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, -1)
+                            }
+                            .offset(y: 20)
                         }
                     }
                     .padding(.horizontal, 5)
@@ -505,8 +550,8 @@ extension Home {
         }
 
         var chart: some View {
-            //let ratio = state.timeSettings ? 1.61 : 1.44
-            //let ratio2 = state.timeSettings ? 1.65 : 1.51
+            // let ratio = state.timeSettings ? 1.61 : 1.44
+            // let ratio2 = state.timeSettings ? 1.65 : 1.51
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
             let ratio = state.timeSettings ? 1.78 : 1.60 // TimeSetting true
             let ratio2 = state.timeSettings ? 1.83 : 1.68 // Timesetting false
@@ -922,7 +967,7 @@ extension Home {
                                 .shadow(color: .white, radius: 2, x: 0, y: 0)
                             bolusProgressView(progress: progress, amount: amount)
                         }
-                        .offset(y: 120)
+                        .offset(y: -270)
                     }
                 }
             }
