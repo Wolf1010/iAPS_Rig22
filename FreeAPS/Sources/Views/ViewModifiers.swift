@@ -147,13 +147,17 @@ struct FrostedGlass: View {
      }
  } */
 extension Color {
-    static let rig22Background = Color(red: 0.08, green: 0.15, blue: 0.20) // RGB-Werte von 0 bis 1
+    static let rig22Background = Color(red: 0.08, green: 0.15, blue: 0.20)
+}
+
+extension Color {
+    static let rig22bottomPanel = Color(red: 0.11, green: 0.13, blue: 0.16)
 }
 
 struct ColouredRoundedBackground: View {
     var body: some View {
-        Rectangle() // Oder RoundedRectangle, falls du die Ecken abgerundet haben möchtest
-            .fill(Color.rig22Background) // Verwende hier die Farbe deiner Wahl
+        Rectangle() // Oder RoundedRectangle für gerundete Ecken
+            .fill(Color.rig22Background)
     }
 }
 

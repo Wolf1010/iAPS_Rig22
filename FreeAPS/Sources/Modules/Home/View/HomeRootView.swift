@@ -157,26 +157,6 @@ extension Home {
             }
         }
 
-        struct PieSliceView: Shape {
-            var startAngle: Angle
-            var endAngle: Angle
-
-            func path(in rect: CGRect) -> Path {
-                var path = Path()
-                let center = CGPoint(x: rect.midX, y: rect.midY)
-                path.move(to: center)
-                path.addArc(
-                    center: center,
-                    radius: rect.width / 2,
-                    startAngle: startAngle,
-                    endAngle: endAngle,
-                    clockwise: false
-                )
-                path.closeSubpath()
-                return path
-            }
-        }
-
         public struct CircularProgressViewStyle: ProgressViewStyle {
             public func makeBody(configuration: Configuration) -> some View {
                 let progress = CGFloat(configuration.fractionCompleted ?? 0)
@@ -253,9 +233,27 @@ extension Home {
             }
         }
 
+        struct PieSliceView: Shape {
+            var startAngle: Angle
+            var endAngle: Angle
+
+            func path(in rect: CGRect) -> Path {
+                var path = Path()
+                let center = CGPoint(x: rect.midX, y: rect.midY)
+                path.move(to: center)
+                path.addArc(
+                    center: center,
+                    radius: rect.width / 2,
+                    startAngle: startAngle,
+                    endAngle: endAngle,
+                    clockwise: false
+                )
+                path.closeSubpath()
+                return path
+            }
+        }
+
         struct FillablePieSegment: View {
-//            @State private var progress: CGFloat = 0.0
-            @StateObject var state = StateModel()
             @Binding var progress: Double // Binding Variable für progress
             var fillFraction: CGFloat
             var color: Color
@@ -292,42 +290,15 @@ extension Home {
                 }
                 .offset(y: 10)
                 .onAppear {
-                    updateProgress()
+                    self.progress = Double(fillFraction)
                 }
-                .onChange(of: fillFraction) { _ in
-                    updateProgress()
-                }
-            }
-
-            private func updateProgress() {
-                if fillFraction < 0.001 {
-                    progress = 0.0
-                } else if animateProgress {
-                    startProgress()
-                } else {
-                    progress = fillFraction
-                }
-            }
-
-            private func startProgress() {
-                progress = 0.0
-                let animationDuration = 2.5 // Animationsgeschwindigkeit
-                let steps = Int(animationDuration / 0.05)
-                let stepAmount = fillFraction / CGFloat(steps)
-
-                Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
-
-                    withAnimation(.easeInOut(duration: 0.02)) {
-                        progress += stepAmount / 5
-                    }
-                    if progress >= fillFraction || fillFraction < 0.001 {
-                        timer.invalidate()
-                        progress = fillFraction
-
-                        // Fallback: Wenn fillFraction sehr klein ist, setze progress auf 0
-                        if fillFraction < 0.001 {
-                            progress = 0
+                .onChange(of: fillFraction) { newValue in
+                    if animateProgress {
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            progress = Double(newValue)
                         }
+                    } else {
+                        progress = Double(newValue)
                     }
                 }
             }
@@ -357,18 +328,7 @@ extension Home {
                                 symbol: carbSymbol,
                                 animateProgress: true
                             )
-
-                            HStack(spacing: 0) {
-                                Text(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
-
-                                Text(NSLocalizedString("g", comment: "gram of carbs"))
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.leading, -1)
-                            }
-                            .offset(y: 20)
+                            .padding(.bottom, 20) // Platz unter dem Segment
                         }
 
                         VStack {
@@ -388,18 +348,7 @@ extension Home {
                                 symbol: insulinSymbol,
                                 animateProgress: true
                             )
-
-                            HStack(spacing: 0) {
-                                Text(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
-
-                                Text(NSLocalizedString("U", comment: "Insulin unit"))
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.white)
-                                    .padding(.leading, -1)
-                            }
-                            .offset(y: 20)
+                            .padding(.bottom, 20) // Platz unter dem Segment
                         }
                     }
                     .padding(.horizontal, 5)
@@ -501,65 +450,13 @@ extension Home {
         var infoPanel: some View {
             ZStack {
                 addBackground()
-                /*              LinearGradient(
-                     gradient: Gradient(colors: [.rig22Background, .rig22Background]),
-                     startPoint: .top,
-                     endPoint: .bottom
-                 )*/
                 info
                     .frame(minWidth: 100, idealWidth: 200, maxWidth: 430, minHeight: 15, maxHeight: 45)
                     .padding(20)
             }
-            .frame(width: 430, height: 35) // Optional: Festlegen einer festen Größe für den gesamten ZStack
+            .frame(width: 430, height: 30) // Optional: Festlegen einer festen Größe für den gesamten ZStack
         }
 
-        /*        var mainChart: some View {
-             ZStack {
-                 LinearGradient(
-                     gradient: Gradient(colors: [.black, .black]),
-                     startPoint: .top,
-                     endPoint: .bottom
-                 )
-                 if state.animatedBackground {
-                     SpriteView(scene: spriteScene, options: [.allowsTransparency])
-                         .ignoresSafeArea()
-                         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
-                 }
-                 MainChartView(
-                     glucose: $state.glucose,
-                     isManual: $state.isManual,
-                     suggestion: $state.suggestion,
-                     tempBasals: $state.tempBasals,
-                     boluses: $state.boluses,
-                     suspensions: $state.suspensions,
-                     announcement: $state.announcement,
-                     hours: .constant(state.filteredHours),
-                     maxBasal: $state.maxBasal,
-                     autotunedBasalProfile: $state.autotunedBasalProfile,
-                     basalProfile: $state.basalProfile,
-                     tempTargets: $state.tempTargets,
-                     carbs: $state.carbs,
-                     timerDate: $state.timerDate,
-                     units: $state.units,
-                     smooth: $state.smooth,
-                     highGlucose: $state.highGlucose,
-                     lowGlucose: $state.lowGlucose,
-                     screenHours: $state.hours,
-                     displayXgridLines: $state.displayXgridLines,
-                     displayYgridLines: $state.displayYgridLines,
-                     thresholdLines: $state.thresholdLines,
-                     triggerUpdate: $triggerUpdate,
-                     overrideHistory: $state.overrideHistory,
-                     minimumSMB: $state.minimumSMB,
-                     maxBolus: $state.maxBolus,
-                     maxBolusValue: $state.maxBolusValue, useInsulinBars: $state.useInsulinBars
-                 )
-             }
-             .padding(.bottom, 50)
-             .clipShape(RoundedRectangle(cornerRadius: 15)) // Rundung anwenden
-             .shadow(color: Color.black.opacity(0.2), radius: 10, x: 0, y: 0) // Schatten hinzufügen
-             .modal(for: .dataTable, from: self)
-         }*/
         var mainChart: some View {
             ZStack {
                 if state.animatedBackground {
@@ -598,20 +495,21 @@ extension Home {
                     useInsulinBars: $state.useInsulinBars
                 )
             }
-            .padding(.bottom, 0)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.black)
-                    .shadow(color: Color.black.opacity(0.8), radius: 6, x: 2, y: 2)
-            )
+//            .background(
+//                RoundedRectangle(cornerRadius: 10)
+//                    .fill(Color.black)
+//                    .shadow(color: Color.black.opacity(0.8), radius: 6, x: 2, y: 2)
+//            )
             .modal(for: .dataTable, from: self)
             .padding()
         }
 
         var chart: some View {
+            //let ratio = state.timeSettings ? 1.61 : 1.44
+            //let ratio2 = state.timeSettings ? 1.65 : 1.51
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.78 : 1.58
-            let ratio2 = state.timeSettings ? 1.83 : 1.68
+            let ratio = state.timeSettings ? 1.78 : 1.60 // TimeSetting true
+            let ratio2 = state.timeSettings ? 1.83 : 1.68 // Timesetting false
 
             return addBackground()
                 .overlay {
@@ -628,7 +526,7 @@ extension Home {
             ZStack {
                 addBackground()
                 LinearGradient(
-                    gradient: Gradient(colors: [.rig22Background, .rig22Background]),
+                    gradient: Gradient(colors: [.rig22bottomPanel, .rig22bottomPanel]),
                     startPoint: .top,
                     endPoint: .bottom
                 )
@@ -1028,8 +926,7 @@ extension Home {
                     }
                 }
             }
-            .onAppear(perform: startProgress) // Startet den Fortschritt, wenn die Ansicht erscheint
-
+            .onAppear(perform: startProgress)
             .navigationTitle("Home")
             .navigationBarHidden(true)
             .ignoresSafeArea(.keyboard)

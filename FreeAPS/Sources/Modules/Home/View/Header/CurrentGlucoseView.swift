@@ -81,7 +81,7 @@ struct CurrentGlucoseView: View {
                                     .string(from: Double(units == .mmolL ? $0.asMmolL : Decimal($0)) as NSNumber)!
                             } ?? "--"
                     )
-                    .font(.system(size: 40, weight: .bold))
+                    .font(.system(size: 36, weight: .bold))
                     .foregroundColor(alarm == nil ? colourGlucoseText : .loopYellow)
                 }
                 HStack {
@@ -202,7 +202,7 @@ struct TrendShape: View {
 
      var body: some View {
          Circle()
-             .fill(Color.clear.opacity(0.1))
+             .fill(Color.teal.opacity(0.1))
              .frame(width: 130, height: 130)
          Circle()
              .stroke(gradient, lineWidth: 6)
@@ -210,6 +210,7 @@ struct TrendShape: View {
              .frame(width: 130, height: 130)
      }
  } */
+
 struct CircleShape: View {
     @Environment(\.colorScheme) var colorScheme
 
@@ -223,13 +224,13 @@ struct CircleShape: View {
                     startPoint: .top,
                     endPoint: .bottom
                 ))
-                .frame(width: 130, height: 130)
+                .frame(width: 120, height: 120)
                 .opacity(0.2)
 
             Circle()
                 .stroke(gradient, lineWidth: 6)
                 .background(Circle().fill(Color("Chart")))
-                .frame(width: 130, height: 130)
+                .frame(width: 120, height: 120)
         }
     }
 }
@@ -242,6 +243,6 @@ struct TriangleShape: View {
             .fill(color)
             .frame(width: 35, height: 35)
             .rotationEffect(.degrees(90))
-            .offset(x: 85)
+            .offset(x: 80)
     }
 }
