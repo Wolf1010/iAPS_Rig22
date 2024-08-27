@@ -233,6 +233,7 @@ extension Home {
                 }
             }
         }
+
         // Animation der Kuchenstück Füllung
         struct PieSliceView: Shape {
             var startAngle: Angle
@@ -450,46 +451,65 @@ extension Home {
                         if state.pumpSuspended {
                             Text("Pump suspended")
                                 .font(.extraSmall).bold().foregroundStyle(Color.white)
+                            //                             .hidden() // Element unsichtbar machen
                         } else if let tempBasalString = tempBasalString {
                             Text(tempBasalString)
                                 .font(.system(size: 14))
                                 .foregroundStyle(Color.white)
+                            //                            .hidden() // Element unsichtbar machen
                         }
                         if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
-                            Text("Check Max IOB Setting").font(.extraSmall).foregroundColor(.orange)
+                            Text("Check Max IOB Setting")
+                                .font(.extraSmall)
+                                .foregroundColor(.orange)
+                            //                               .hidden() // Element unsichtbar machen
                         }
                     }
                 }
                 .padding(.leading, 5)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .hidden() // ZStack unsichtbar machen
 
                 if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
                     Text(tempTargetString)
                         .font(.buttonFont)
                         .foregroundStyle(Color.white)
+                    //                       .offset(y: -120) // 120 Pixel nach oben verschieben
                 } else {
-                    profileView
+                    profileView // Profile View unsichtbar machen
                 }
 
                 ZStack {
                     if let eventualBG = state.eventualBG {
                         HStack {
-                            Text("⇢").font(.statusFont).foregroundStyle(.white)
+                            Text("⇢")
+                                .font(.statusFont)
+                                .foregroundStyle(.white)
+                                .offset(y: -120) // 120 Pixel nach oben verschieben
 
-                            // Image(systemName: "arrow.forward")
                             Text(
                                 fetchedTargetFormatter.string(
                                     from: (state.units == .mmolL ? eventualBG.asMmolL : Decimal(eventualBG)) as NSNumber
                                 )!
-                            ).font(.statusFont).foregroundColor(colorScheme == .dark ? .white : .white)
-                            Text(state.units.rawValue).font(.system(size: 12)).foregroundStyle(.white)
-                                .foregroundStyle(Color.white)
+                            )
+                            .font(.statusFont)
+                            .foregroundColor(colorScheme == .dark ? .white : .white)
+                            //          .offset(y: -120) // 120 Pixel nach oben verschieben
+                            .hidden()
+
+                            Text(state.units.rawValue)
+                                .font(.system(size: 12))
+                                .foregroundStyle(.white)
+                                //             .offset(y: -120) // 120 Pixel nach oben verschieben
+                                .hidden()
                         }
                         .frame(maxWidth: .infinity, alignment: .trailing)
                         .padding(.trailing, 8)
                     }
                 }
-            }.dynamicTypeSize(...DynamicTypeSize.xxLarge)
+                //   .hidden() // ZStack unsichtbar machen
+            }
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
 
         var infoPanel: some View {
@@ -792,8 +812,7 @@ extension Home {
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addBackground()
                 .frame(
-                    maxHeight: fontSize < .extraExtraLarge ? 240 + geo.safeAreaInsets.top : 135 + geo
-                        .safeAreaInsets.top
+                    maxHeight: fontSize < .extraExtraLarge ? 240 + geo.safeAreaInsets.top : 135 + geo.safeAreaInsets.top
                 )
                 .overlay {
                     VStack {
@@ -803,12 +822,64 @@ extension Home {
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
-                            glucoseView.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top).padding(.top, 75)
+
+                            glucoseView
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                                .padding(.top, 75)
+
+                            VStack(spacing: 5) {
+                                HStack(spacing: 8) { // Geringer Abstand zwischen Symbol und Text
+                                    Image(systemName: "chart.xyaxis.line")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 18, height: 18) // Angepasste Größe des Symbols
+                                        .foregroundColor(.white)
+
+                                    if let tempBasalString = tempBasalString {
+                                        Text(tempBasalString)
+                                            .font(.system(size: 16))
+                                            .foregroundStyle(Color.white)
+                                    }
+                                }
+                                .offset(x: -140, y: 0)
+
+                                if let eventualBG = state.eventualBG {
+                                    HStack {
+                                        Text("⇢")
+                                            .font(.statusFont)
+                                            .foregroundStyle(.white)
+
+                                        Text(
+                                            fetchedTargetFormatter.string(
+                                                from: (
+                                                    state.units == .mmolL ? eventualBG
+                                                        .asMmolL : Decimal(eventualBG)
+                                                ) as NSNumber
+                                            )!
+                                        )
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.white)
+
+                                        Text(state.units.rawValue)
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.white)
+                                            .padding(.leading, -6)
+                                    }
+                                    .offset(x: 140, y: -27)
+                                }
+                            }
+                            /*                          .padding(
+                                 .top,
+                                 40
+                             )*/ // Bewegt das gesamte VStack ein wenig nach unten, um es nicht zu nah am oberen Rand zu haben
+
                             HStack {
                                 carbsAndInsulinView
                                     .frame(maxHeight: .infinity, alignment: .bottom)
                                 Spacer()
-                                loopView.frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 5)
+                                loopView
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                    .padding(.bottom, 5)
                                     .offset(x: -4)
                                 Spacer()
                                 pumpView
@@ -819,7 +890,6 @@ extension Home {
                             .padding(.horizontal, 10)
                         }
                     }
-                    //                   .padding(.top, geo.safeAreaInsets.top).padding(.bottom, 0)
                     .padding(.top, 0).padding(.bottom, 0)
                 }
                 .clipShape(Rectangle())

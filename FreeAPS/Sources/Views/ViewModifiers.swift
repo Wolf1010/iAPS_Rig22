@@ -151,7 +151,7 @@ extension Color {
 }
 
 extension Color {
-    static let rig22bottomPanel = Color(red: 0.11, green: 0.13, blue: 0.16)
+    static let rig22bottomPanel = Color(red: 0.08, green: 0.15, blue: 0.20)
 }
 
 struct ColouredRoundedBackground: View {
