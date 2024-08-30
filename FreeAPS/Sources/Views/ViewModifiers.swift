@@ -154,6 +154,10 @@ extension Color {
     static let rig22bottomPanel = Color(red: 0.08, green: 0.15, blue: 0.20)
 }
 
+extension Color {
+    static let rig22BGGlucoseWheel = Color(red: 0.17, green: 0.21, blue: 0.24)
+}
+
 struct ColouredRoundedBackground: View {
     var body: some View {
         Rectangle() // Oder RoundedRectangle für gerundete Ecken
