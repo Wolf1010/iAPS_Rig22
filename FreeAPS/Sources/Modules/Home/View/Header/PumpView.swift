@@ -49,13 +49,13 @@ struct PumpView: View {
         var symbolSize: CGFloat = 26
 
         var body: some View {
-            VStack(spacing: 2) {
+            VStack(spacing: 8) {
                 ZStack {
                     // Hintergrundkreis
                     Circle()
-                        .fill(backgroundColor) // Hintergrundfarbe
+                        .fill(backgroundColor)
                         .opacity(0.3)
-                        .frame(width: 50, height: 50) // Gleiche Größe wie der Pie-Segment
+                        .frame(width: 50, height: 50)
 
                     // Gefüllter Pie-Slice
                     PieSliceView(
@@ -77,13 +77,13 @@ struct PumpView: View {
                     }
                 }
                 .frame(width: 50, height: 50)
-                .offset(y: 23)
+                .offset(y: 3)
 
                 if let displayText = displayText {
                     Text(displayText)
                         .font(.system(size: 16))
                         .foregroundColor(.white)
-                        .offset(y: 25) // Der Wert hier schiebt carbsandinsulin nach oben und unten
+                        .offset(y: 0)
                 }
             }
             .frame(width: 50)
@@ -116,7 +116,7 @@ struct PumpView: View {
                 let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
-                let reservoirSymbol = "backpack"
+                let reservoirSymbol = "fuelpump"
 
                 PieSegment(
                     fillFraction: fill,
@@ -128,7 +128,6 @@ struct PumpView: View {
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
-                .offset(y: -10)
             } else {
                 Text("No Pump")
                     .font(.system(size: 16))
@@ -153,17 +152,22 @@ struct PumpView: View {
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
-                .offset(y: -10)
             }
 
             // Anzeige des Ablaufdatums
             if let date = expiresAtDate {
                 VStack {
+                    Circle()
+                        .fill(timerColor)
+                        .opacity(1.0)
+                        // .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .offset(y: -15)
                     Image("pod_reservoir")
                         .resizable(resizingMode: .stretch)
                         .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
                         .foregroundColor(colorScheme == .dark ? .secondary : .white)
-                        .offset(x: 0, y: -5)
+                        .offset(x: 0, y: -15)
                         .overlay {
                             if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
                                 ClockOffset(mdtPump: false)
