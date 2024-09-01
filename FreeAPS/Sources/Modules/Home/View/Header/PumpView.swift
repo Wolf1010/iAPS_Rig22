@@ -146,40 +146,31 @@ struct PumpView: View {
                     fillFraction: batteryFill,
                     color: batteryColor,
                     backgroundColor: .gray,
-                    displayText: batteryText, // Prozentsatz als Text
-                    symbol: batterySymbol, // Symbol für die Batterieanzeige
+                    displayText: batteryText,
+                    symbol: batterySymbol,
                     symbolSize: 26
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
             }
 
-            // Anzeige des Ablaufdatums
             if let date = expiresAtDate {
-                VStack {
-                    Circle()
-                        .fill(timerColor)
-                        .opacity(1.0)
-                        // .scaledToFit()
-                        .frame(width: 50, height: 50)
-                        .offset(y: -15)
-                    Image("pod_reservoir")
-                        .resizable(resizingMode: .stretch)
-                        .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
-                        .foregroundColor(colorScheme == .dark ? .secondary : .white)
-                        .offset(x: 0, y: -15)
-                        .overlay {
-                            if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
-                                ClockOffset(mdtPump: false)
-                            }
+                Image("pod_reservoir")
+                    .resizable(resizingMode: .stretch)
+                    .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
+                    .foregroundStyle(Color.white)
+                    .offset(x: 0, y: -5)
+                    .overlay {
+                        if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
+                            ClockOffset(mdtPump: false)
                         }
-
-                    remainingTime(time: date.timeIntervalSince(timerDate))
-                        .font(.pumpFont)
-                        .offset(x: -7, y: 0)
-                }
+                    }
+                remainingTime(time: date.timeIntervalSince(timerDate))
+                    .font(.pumpFont)
+                    .foregroundStyle(Color.white)
+                    .offset(x: -7, y: 0)
             } else if state.pumpName.contains("Omni") {
-                Text("No Pod").font(.subheadline).foregroundStyle(.secondary)
+                Text("No Pod").font(.statusFont).foregroundStyle(Color.white)
                     .offset(x: 0, y: -4)
             }
         }

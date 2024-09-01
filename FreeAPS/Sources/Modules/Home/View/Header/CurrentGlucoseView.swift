@@ -195,22 +195,6 @@ struct TrendShape: View {
     }
 }
 
-/* struct CircleShape: View {
-     @Environment(\.colorScheme) var colorScheme
-
-     let gradient: AngularGradient
-
-     var body: some View {
-         Circle()
-             .fill(Color.teal.opacity(0.1))
-             .frame(width: 130, height: 130)
-         Circle()
-             .stroke(gradient, lineWidth: 6)
-             .background(Circle().fill(Color("Chart")))
-             .frame(width: 130, height: 130)
-     }
- } */
-
 struct CircleShape: View {
     @Environment(\.colorScheme) var colorScheme
 

@@ -47,6 +47,7 @@ extension Home {
         @Published var bolusProgress: Decimal?
         @Published var bolusAmount: Decimal?
         @Published var eventualBG: Int?
+        @Published var isf: Decimal?
         @Published var carbsRequired: Decimal?
         @Published var allowManualTemp = false
         @Published var units: GlucoseUnits = .mmolL
@@ -458,6 +459,7 @@ extension Home {
             }
 
             eventualBG = suggestion.eventualBG
+            isf = suggestion.isf
         }
 
         private func setupReservoir() {
