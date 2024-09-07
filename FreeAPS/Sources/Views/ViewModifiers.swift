@@ -34,7 +34,7 @@ struct CapsulaBackground: ViewModifier {
                 Rectangle()
                     // Capsule()
                     .fill()
-                    .foregroundColor(color)
+                    .foregroundColor(Color.white)
             )
     }
 }
@@ -158,6 +158,14 @@ extension Color {
     static let rig22BGGlucoseWheel = Color(red: 0.17, green: 0.21, blue: 0.24)
 }
 
+extension Color {
+    static let connectionStatusOff = Color(red: 1.00, green: 0.00, blue: 0.00)
+}
+
+extension Color {
+    static let connectionStatusConnected = Color(red: 0.00, green: 1.00, blue: 0.00)
+}
+
 struct ColouredRoundedBackground: View {
     var body: some View {
         Rectangle() // Oder RoundedRectangle für gerundete Ecken
@@ -166,13 +174,10 @@ struct ColouredRoundedBackground: View {
 }
 
 struct ColouredBackground: View {
-    @Environment(\.colorScheme) var colorScheme
+    // @Environment(\.colorScheme) var colorScheme
     var body: some View {
         Rectangle()
-            .fill(
-                colorScheme == .dark ? .black :
-                    Color.white
-            )
+            .fill(Color.rig22Background)
     }
 }
 
@@ -184,7 +189,7 @@ struct LoopEllipse: View {
             .stroke(stroke, lineWidth: colorScheme == .light ? 2 : 1)
             .background(
                 RoundedRectangle(cornerRadius: 15)
-                    .fill(Color.white).opacity(colorScheme == .light ? 0.2 : 0.08)
+                    .fill(Color.rig22Background)
             )
     }
 }
@@ -200,10 +205,9 @@ struct TimeEllipse: View {
 }
 
 struct HeaderBackground: View {
-    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         Rectangle()
-            .fill(colorScheme == .light ? .gray.opacity(IAPSconfig.backgroundOpacity) : Color.header2.opacity(1))
+            .fill(Color.rig22Background)
     }
 }
 
@@ -223,11 +227,11 @@ struct ClockOffset: View {
 }
 
 struct ChartBackground: ViewModifier {
-    @Environment(\.colorScheme) var colorScheme
-
     func body(content: Content) -> some View {
         content
-            .background(colorScheme == .light ? .gray.opacity(0.05) : .black).brightness(colorScheme == .dark ? 0.05 : 0)
+            .background(
+                Color.rig22Background
+            )
     }
 }
 

@@ -45,7 +45,8 @@ struct PumpView: View {
         var color: Color
         var backgroundColor: Color
         var displayText: String?
-        var symbol: String?
+        var symbol: String? // SF Symbol als String
+        var customImage: Image? // Custom Image als Image
         var symbolSize: CGFloat = 26
 
         var body: some View {
@@ -66,13 +67,19 @@ struct PumpView: View {
                     .animation(.easeInOut, value: fillFraction)
                     .opacity(0.6)
 
-                    // Symbol im Pie-Segment
+                    // Symbol im Pie-Segment: Entweder SF-Symbol oder benutzerdefiniertes Bild
                     if let symbol = symbol {
                         Image(systemName: symbol)
                             .resizable()
                             .scaledToFit()
                             .frame(width: symbolSize, height: symbolSize)
                             .foregroundColor(.white)
+                            .opacity(1.0)
+                    } else if let customImage = customImage {
+                        customImage
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: symbolSize, height: symbolSize)
                             .opacity(1.0)
                     }
                 }
@@ -112,18 +119,21 @@ struct PumpView: View {
 
     var body: some View {
         HStack(spacing: 8) {
+            let maxValue: Decimal = state.pumpName.contains("Omni") ? Decimal(200) : Decimal(300)
+
+            // Reservoir-Anzeige
             if let reservoir = reservoir {
-                let maxValue = Decimal(300) // Maximalwert als Decimal
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
                 let reservoirSymbol = "fuelpump"
 
                 PieSegment(
                     fillFraction: fill,
-                    color: reservoirColor, backgroundColor: .gray,
+                    color: reservoirColor,
+                    backgroundColor: .gray,
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
-                    symbol: reservoirSymbol,
+                    symbol: reservoirSymbol, // SF Symbol für das Reservoir
                     symbolSize: 26
                 )
                 .padding(.trailing, 8)
@@ -134,11 +144,11 @@ struct PumpView: View {
                     .foregroundStyle(.white)
                     .offset(x: -22, y: 0)
             }
+
             // Batterieanzeige
             if let battery = battery, !state.pumpName.contains("Omni") {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
-                // Der Prozentsatz direkt hier als Text
                 let batteryText = "\(Int(batteryFraction * 100))%"
                 let batterySymbol = "macpro.gen2"
 
@@ -147,28 +157,50 @@ struct PumpView: View {
                     color: batteryColor,
                     backgroundColor: .gray,
                     displayText: batteryText,
-                    symbol: batterySymbol,
+                    symbol: batterySymbol, // SF Symbol für Batterie
                     symbolSize: 26
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
-            }
+            } /* else if state.pumpName.contains("Omni") {
+                 // Pod Reservoir Anzeige mit benutzerdefiniertem Bild
+                 PieSegment(
+                     fillFraction: 1.0,
+                     color: batteryColor,
+                     backgroundColor: .gray,
+                     displayText: "Pod",
+                     symbol: nil, // Kein SF Symbol
+                     customImage: Image("pod_reservoir"), // Benutzerdefiniertes Bild
+                     symbolSize: 26
+                 )
+                 .padding(.trailing, 8)
+                 .layoutPriority(1)
+             } */
 
+            // Pod-Lebensdauer
             if let date = expiresAtDate {
-                Image("pod_reservoir")
-                    .resizable(resizingMode: .stretch)
-                    .frame(width: IAPSconfig.iconSize * 1.15, height: IAPSconfig.iconSize * 1.6)
-                    .foregroundStyle(Color.white)
-                    .offset(x: 0, y: -5)
-                    .overlay {
-                        if let timeZone = timeZone, timeZone.secondsFromGMT() != TimeZone.current.secondsFromGMT() {
-                            ClockOffset(mdtPump: false)
-                        }
-                    }
-                remainingTime(time: date.timeIntervalSince(timerDate))
-                    .font(.pumpFont)
-                    .foregroundStyle(Color.white)
-                    .offset(x: -7, y: 0)
+                let remainingTimeMinutes = date.timeIntervalSince(timerDate) / 1.minutes.timeInterval
+                let remainingTimeHours = date.timeIntervalSince(timerDate) / 1.hours.timeInterval
+                let remainingTimePercent = Float(remainingTimeHours * 100 / 72)
+
+                let hours = Int(remainingTimeHours.rounded())
+                let minutes = Int(remainingTimeMinutes)
+
+                let batteryFraction = CGFloat(remainingTimePercent) / 100.0
+                let batteryFill = max(min(batteryFraction, 1.0), 0.0)
+                // let batterySymbol = "macpro.gen2" // brauchen wir nicht
+
+                PieSegment(
+                    fillFraction: batteryFill,
+                    color: PodColor(percent: remainingTimePercent),
+                    backgroundColor: (hours < 2 && minutes < 0) ? .red : .gray, // .gray,
+                    displayText: hours > 2 ? "\(hours)h" : "\(minutes)m",
+                    symbol: nil, // Kein SF Symbol
+                    customImage: Image("pod_reservoir"), // Benutzerdefiniertes Bild
+                    symbolSize: 26
+                )
+                .padding(.trailing, 8)
+                .layoutPriority(1)
             } else if state.pumpName.contains("Omni") {
                 Text("No Pod").font(.statusFont).foregroundStyle(Color.white)
                     .offset(x: 0, y: -4)
@@ -212,6 +244,19 @@ struct PumpView: View {
         }
     }
 
+    private func PodColor(percent: Float) -> Color {
+        switch percent {
+        case ...0:
+            return .gray
+        case ...25:
+            return .red
+        case ...50:
+            return .yellow
+        default:
+            return .green
+        }
+    }
+
     private var reservoirColor: Color {
         guard let reservoir = reservoir else {
             return .gray
@@ -221,23 +266,6 @@ struct PumpView: View {
         case ...10:
             return .red
         case ...30:
-            return .yellow
-        default:
-            return .green
-        }
-    }
-
-    private var timerColor: Color {
-        guard let expisesAt = expiresAtDate else {
-            return .gray
-        }
-
-        let time = expisesAt.timeIntervalSince(timerDate)
-
-        switch time {
-        case ...8.hours.timeInterval:
-            return .red
-        case ...1.days.timeInterval:
             return .yellow
         default:
             return .green

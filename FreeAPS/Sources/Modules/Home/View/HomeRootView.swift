@@ -1,6 +1,7 @@
 import Charts
 import Combine
 import CoreData
+import DanaKit
 import SpriteKit
 import SwiftDate
 import SwiftUI
@@ -24,7 +25,7 @@ extension Home {
         let buttonFont = Font.custom("TimeButtonFont", size: 14)
 
         @Environment(\.managedObjectContext) var moc
-        @Environment(\.colorScheme) var colorScheme
+        //  @Environment(\.colorScheme) var colorScheme
         @Environment(\.sizeCategory) private var fontSize
 
         @FetchRequest(
@@ -170,6 +171,19 @@ extension Home {
             }
         }
 
+        // Fortschrittsanzeige
+        private func startProgress() {
+            Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
+                withAnimation(Animation.linear(duration: 0.02)) {
+                    progress += 0.01
+                }
+                if progress >= 1.0 {
+                    timer.invalidate()
+                }
+            }
+        }
+
+        // Progressbar by Rig22
         public struct CircularProgressViewStyle: ProgressViewStyle {
             public func makeBody(configuration: Configuration) -> some View {
                 let progress = CGFloat(configuration.fractionCompleted ?? 0)
@@ -227,15 +241,10 @@ extension Home {
                 .overlay {
                     VStack {
                         ZStack {
-                            LinearGradient(
-                                gradient: Gradient(colors: [.rig22Background, .rig22Background]),
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-
                             // Dynamisches Layout mit GeometryReader
                             GeometryReader { geometry in
                                 VStack {
+                                    // Linker Block
                                     HStack {
                                         VStack(alignment: .leading, spacing: 8) {
                                             HStack(spacing: 8) {
@@ -251,7 +260,7 @@ extension Home {
                                                         .foregroundStyle(Color.white)
                                                 }
                                             }
-                                            .padding(.leading, 10)
+                                            .padding(.leading, 6)
                                         }
 
                                         Spacer()
@@ -265,7 +274,6 @@ extension Home {
                                             .overlay(
                                                 ZStack {
                                                     if let progress = state.bolusProgress {
-                                                        // Circular Progress View
                                                         ProgressView(
                                                             value: Double(truncating: progress as NSNumber)
                                                         )
@@ -311,7 +319,9 @@ extension Home {
                                             }
                                         }
                                     }
-                                    .padding(.horizontal, 0)
+
+                                    .padding(.horizontal, 22) // Abstand rechter Rand
+
                                     .padding(.top, -20)
                                 }
                                 .offset(y: 90)
@@ -378,18 +388,6 @@ extension Home {
                     }
                 }
                 .clipShape(Rectangle())
-        }
-
-        // Fortschrittsanzeige
-        private func startProgress() {
-            Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
-                withAnimation(Animation.linear(duration: 0.02)) {
-                    progress += 0.01
-                }
-                if progress >= 1.0 {
-                    timer.invalidate()
-                }
-            }
         }
 
         // Pie Animation by Rig22
@@ -486,6 +484,7 @@ extension Home {
             }
         }
 
+        // carbsAndInsuliView by Rig22
         @StateObject private var carbsPieSegmentViewModel = PieSegmentViewModel()
         @StateObject private var insulinPieSegmentViewModel = PieSegmentViewModel()
 
@@ -536,6 +535,169 @@ extension Home {
             }
         }
 
+        var infoPanel: some View {
+            ZStack {
+                addBackground()
+                info
+            }
+            .frame(maxWidth: .infinity, maxHeight: 30)
+        }
+
+        var timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect() // Aktualisiert alle 30 Sekunden
+
+        var info: some View {
+            HStack(spacing: 10) {
+                // Linker Stack
+                if let currentISF = state.isf {
+                    HStack(spacing: 2) {
+                        Text("ISF:")
+                            .foregroundColor(.white)
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.white)
+
+                        if state.units == .mmolL {
+                            Text(
+                                glucoseFormatter.string(from: currentISF.asMmolL as NSNumber) ?? " "
+                            )
+                            .font(.system(size: 16))
+                        } else {
+                            Text(
+                                glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
+                            )
+                            .font(.system(size: 16))
+                            .foregroundStyle(Color.white)
+
+                            /*  if state.pumpSuspended {
+                                 Text("Pump suspended")
+                                     .font(.extraSmall)
+                                     .bold()
+                                     .foregroundStyle(Color.white)
+                             }
+
+                             if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
+                                 Text("Check Max IOB Setting")
+                                     .font(.extraSmall)
+                                     .foregroundColor(.orange)
+                             }*/
+                        }
+                    }
+                    .padding(.leading, 10)
+                    .frame(maxWidth: .infinity, alignment: .leading) // Linker HStack links ausgerichtet
+                }
+
+                /*  HStack(spacing: 6) {
+                     Image(systemName: "personalhotspot")
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: 20, height: 20)
+                         .foregroundColor(.white)
+
+                     if state.isConnected {
+                         Circle()
+                             .fill(Color.green)
+                             .frame(width: 10, height: 10)
+                     } else {
+                         Circle()
+                             .fill(Color.red)
+                             .frame(width: 10, height: 10)
+                     }
+                 }.padding(.leading, 10)*/
+
+                // Centered HStack
+                HStack(spacing: 0) {
+                    //    HStack(alignment: .top) {
+                    //       Spacer()
+                    //  }
+                    //  .padding(.bottom, 5)
+
+                    if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
+                        Text(tempTargetString)
+                            .font(.buttonFont)
+                            .foregroundStyle(Color.white)
+                    } else {
+                        profileView
+                    }
+                }
+                .frame(maxWidth: .none)
+
+                // Kanülenalter
+
+                /*  HStack(spacing: 4) {
+                     Image(systemName: "gauge.with.needle")
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: 16, height: 16)
+                         .foregroundColor(.white)
+
+                     if let cannulaAge = state.cannulaAge {
+                         Text("\(cannulaAge)")
+                             .foregroundColor(.white)
+                             .font(.system(size: 15))
+                     } else {
+                         Text("--")
+                             .foregroundColor(.white)
+                             .font(.system(size: 15))
+                     }
+                 }*/
+
+                Spacer() // Zentriere den mittleren HStack
+
+                // Rechter Stack
+                HStack {
+                    Text(
+                        "TDD:" + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0")
+                    )
+                    .font(.system(size: 15))
+                    .foregroundColor(.white)
+                    .frame(alignment: .trailing) // rechts ausrichten
+                    .padding(.trailing, 5) // optionaler Abstand vom Rand
+                }
+                .frame(maxWidth: .infinity, alignment: .trailing) // Rechter HStack rechts ausgerichtet
+
+                /* Text(
+                     //numberFormatter.string(from: state.tddChange as NSNumber) ?? "0"
+                     // "ytd. " + (numberFormatter.string(from: state.tddYesterday as NSNumber) ?? "0")
+                 )*/
+                .font(.system(size: 15))
+                .foregroundColor(.white)
+                .frame(alignment: .trailing) // rechts ausrichten
+                .padding(.trailing, 5) // optionaler Abstand vom Rand
+            }
+            .onReceive(timer) { _ in
+                state.specialDanaKitFunction() } // Ruft die Funktion periodisch auf
+            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+        }
+
+        var infoPanelbottom: some View {
+            ZStack {
+                addBackground()
+                info2
+            }
+            .frame(maxWidth: .infinity, maxHeight: 25)
+        }
+
+        var info2: some View {
+            HStack(spacing: 10) {
+                if state.pumpSuspended {
+                    Text("Pump suspended")
+                        .font(.extraSmall)
+                        .bold()
+                        .foregroundStyle(Color.orange)
+                }
+
+                if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
+                    Text("Check Max IOB Setting")
+                        .font(.extraSmall).foregroundColor(.orange)
+                }
+
+                if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
+                    Text(tempTargetString)
+                } else {
+                    profileView
+                }
+            }
+        }
+
         var loopView: some View {
             LoopView(
                 suggestion: $state.suggestion,
@@ -578,85 +740,6 @@ extension Home {
             return tempTarget.displayName
         }
 
-        var info: some View {
-            HStack(spacing: 10) {
-                // Linker Stack
-                if let currentISF = state.isf {
-                    HStack(spacing: 2) {
-                        Text("ISF:")
-                            .foregroundColor(.white)
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.white)
-
-                        if state.units == .mmolL {
-                            Text(
-                                glucoseFormatter.string(from: currentISF.asMmolL as NSNumber) ?? " "
-                            )
-                            .font(.system(size: 16))
-                        } else {
-                            Text(
-                                glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
-                            )
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.white)
-
-                            if state.pumpSuspended {
-                                Text("Pump suspended")
-                                    .font(.extraSmall)
-                                    .bold()
-                                    .foregroundStyle(Color.white)
-                            }
-
-                            if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
-                                Text("Check Max IOB Setting")
-                                    .font(.extraSmall)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                    }
-                    .padding(.leading, 5)
-                    .frame(maxWidth: .infinity, alignment: .leading) // Linker HStack links ausgerichtet
-                } else {
-                    Spacer() // Falls kein ISF vorhanden ist, wird ein Spacer verwendet, um den Platz auszugleichen
-                }
-
-                // Centered HStack
-                HStack(spacing: 5) {
-                    if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
-                        Text(tempTargetString)
-                            .font(.buttonFont)
-                            .foregroundStyle(Color.white)
-                    } else {
-                        profileView
-                    }
-                }
-                .frame(maxWidth: .none)
-
-                Spacer() // Zentriere den mittleren HStack
-
-                // Rechter Stack
-                HStack {
-                    Text(
-                        "TDD " + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0")
-                    )
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(alignment: .trailing) // rechts ausrichten
-                    .padding(.trailing, 5) // optionaler Abstand vom Rand
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing) // Rechter HStack rechts ausgerichtet
-            }
-            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
-        }
-
-        var infoPanel: some View {
-            ZStack {
-                addBackground()
-                info
-            }
-            .frame(maxWidth: .infinity, maxHeight: 25)
-        }
-
         var mainChart: some View {
             ZStack {
                 if state.animatedBackground {
@@ -695,11 +778,11 @@ extension Home {
                     useInsulinBars: $state.useInsulinBars
                 )
             }
-//            .background(
-//                RoundedRectangle(cornerRadius: 10)
-//                    .fill(Color.black)
-//                    .shadow(color: Color.black.opacity(0.8), radius: 6, x: 2, y: 2)
-//            )
+            /* .background(
+                 RoundedRectangle(cornerRadius: 10)
+                     .fill(Color.rig22Background)
+                     .shadow(color: Color.white.opacity(0.4), radius: 6, x: 0, y: 0)
+             )*/
             .modal(for: .dataTable, from: self)
             .padding()
         }
@@ -708,14 +791,15 @@ extension Home {
             // let ratio = state.timeSettings ? 1.61 : 1.44
             // let ratio2 = state.timeSettings ? 1.65 : 1.51
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.78 : 1.60 // TimeSetting true
-            let ratio2 = state.timeSettings ? 1.83 : 1.68 // Timesetting false
+            let ratio = state.timeSettings ? 1.91 : 1.71 // TimeSetting true
+            let ratio2 = state.timeSettings ? 1.96 : 1.81 // Timesetting false
 
             return addBackground()
                 .overlay {
                     VStack(spacing: 0) {
                         infoPanel
                         mainChart
+                            //  info2
                             .frame(width: UIScreen.main.bounds.width * 0.99) // Breite der mainChart anpassen
                     }
                 }
@@ -738,14 +822,16 @@ extension Home {
                     label: {
                         ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
                             // Hintergrundkreis
-                            ////                          Circle()
-                            //                          .fill(.white) // Hintergrundfarbe
-                            //                        .opacity(0.3)
-                            //                      .frame(width: 50, height: 50)
+                            /* Circle()
+                             .fill(.blue)
+                             .opacity(0.3)
+                             .frame(width: 50, height: 50)
+                             .offset(x: 5)*/
                             Image(systemName: "fork.knife")
                                 .renderingMode(.template)
-                                .font(.custom("Buttons", size: 24))
-                                .foregroundColor(colorScheme == .dark ? .loopYellow : .orange)
+                                .font(.custom("Buttons", size: 26))
+                                // .foregroundColor(colorScheme == .dark ? .white : .white)
+                                .foregroundColor(.white)
                                 .padding(8)
                                 .foregroundStyle(Color.white)
                             if let carbsReq = state.carbsRequired {
@@ -767,10 +853,10 @@ extension Home {
                     label: {
                         Image(systemName: "syringe")
                             .renderingMode(.template)
-                            .font(.custom("Buttons", size: 24))
+                            .font(.custom("Buttons", size: 26))
                     }
                     .buttonStyle(.borderless)
-                    .foregroundStyle(Color.blue)
+                    .foregroundStyle(Color.white)
                     Spacer()
                     if state.allowManualTemp {
                         Button { state.showModal(for: .manualTempBasal) }
@@ -783,30 +869,31 @@ extension Home {
                         .foregroundStyle(Color.white)
                         Spacer()
                     }
-                    ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
-                        Image(systemName: isOverride ? "person.fill" : "person")
-                            .symbolRenderingMode(.palette)
-                            .font(.custom("Buttons", size: 24))
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(isOverride ? .blue.opacity(0.5) : .clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                    }
-                    .onTapGesture {
-                        if isOverride {
-                            showCancelAlert.toggle()
-                        } else {
+                    ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom))
+                        {
+                            Image(systemName: isOverride ? "person.fill" : "person")
+                                .symbolRenderingMode(.palette)
+                                .font(.custom("Buttons", size: 26))
+                                .foregroundStyle(.white)
+                                .padding(8)
+                                .background(isOverride ? .blue.opacity(0.5) : .clear)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                        }
+                        .onTapGesture {
+                            if isOverride {
+                                showCancelAlert.toggle()
+                            } else {
+                                state.showModal(for: .overrideProfilesConfig)
+                            }
+                        }
+                        .onLongPressGesture {
                             state.showModal(for: .overrideProfilesConfig)
                         }
-                    }
-                    .onLongPressGesture {
-                        state.showModal(for: .overrideProfilesConfig)
-                    }
                     if state.useTargetButton {
                         Spacer()
                         Image(systemName: "scope")
                             .renderingMode(.template)
-                            .font(.custom("Buttons", size: 24))
+                            .font(.custom("Buttons", size: 26))
                             .padding(8)
                             .foregroundStyle(Color.white)
                             .background(isTarget ? .green.opacity(0.15) : .clear)
@@ -827,7 +914,7 @@ extension Home {
                     label: {
                         Image(systemName: "gear")
                             .renderingMode(.template)
-                            .font(.custom("Buttons", size: 24))
+                            .font(.custom("Buttons", size: 26))
                     }
                     .buttonStyle(.borderless)
                     .foregroundStyle(Color.white)
@@ -993,6 +1080,7 @@ extension Home {
                             .locale(Locale(identifier: "sv"))
                     )
                     AxisGridLine()
+                        .foregroundStyle(Color.white)
                 }
             }
             .chartYAxis {
@@ -1045,7 +1133,7 @@ extension Home {
                             LazyVStack {
                                 chart
                                 if state.timeSettings { timeSetting }
-                                preview.padding(.top, state.timeSettings ? 5 : -5)
+                                preview.padding(.top, state.timeSettings ? 20 : -5)
                                 loopPreview.padding(.top, 0)
                                 if state.iobData.count > 5 {
                                     activeCOBView.padding(.top, 15)
@@ -1071,7 +1159,7 @@ extension Home {
                     buttonPanel(geo)
                         .frame(height: 60)
                 }
-                .background()
+                .background(Color.rig22Background)
                 .ignoresSafeArea(edges: .vertical)
             }
             .onAppear(perform: startProgress)

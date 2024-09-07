@@ -32,6 +32,7 @@ struct ActiveIOBView: View {
             Text("Active Insulin").font(.previewHeadline).padding(.top, 20)
             iobView().frame(maxHeight: 130).padding(.horizontal, 20)
             sumView().frame(maxHeight: 250).padding(.vertical, 30)
+                .foregroundStyle(Color.white)
         }.dynamicTypeSize(...DynamicTypeSize.xLarge)
     }
 
@@ -50,13 +51,22 @@ struct ActiveIOBView: View {
             AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
                 AxisValueLabel(
                     format: .dateTime.hour(.defaultDigits(amPM: .omitted))
-                        .locale(Locale(identifier: "sv")) // Force 24h. Not pretty.
+                        .locale(Locale(identifier: "sv"))
                 )
+                .foregroundStyle(Color.white) // Achsenbeschriftung auf Weiß setzen
+
                 AxisGridLine()
+                    .foregroundStyle(Color.white) // Gitterlinien auf Weiß setzen
             }
         }
         .chartYAxis {
-            AxisMarks(values: .automatic(desiredCount: 3))
+            AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                AxisValueLabel()
+                    .foregroundStyle(Color.white) // Y-Achsenbeschriftung auf Weiß setzen
+
+                AxisGridLine()
+                    .foregroundStyle(Color.white) // Gitterlinien auf Weiß setzen
+            }
         }
         .chartYScale(
             domain: minimumRange ... maximum
@@ -64,6 +74,7 @@ struct ActiveIOBView: View {
         .chartXScale(
             domain: Date.now.addingTimeInterval(-1.days.timeInterval) ... Date.now
         )
+        .foregroundStyle(Color.white) // Allgemeiner Stil auf Weiß setzen
     }
 
     @ViewBuilder private func sumView() -> some View {
@@ -130,16 +141,18 @@ struct ActiveIOBView: View {
             ForEach(insulinData) { entry in
 
                 GridRow(alignment: .firstTextBaseline) {
-                    Text(entry.variable).foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(entry.variable).foregroundStyle(.white).frame(maxWidth: .infinity, alignment: .leading)
                     Text("")
+                        .foregroundStyle(Color.white)
                     if entry.insulin != 0 {
                         Text(
                             ((isTDD(entry.insulin) ? tddFormatter : formatter).string(for: entry.insulin) ?? "") + entry
                                 .formula
                         )
+                        .foregroundStyle(Color.white)
                         .bold(entry == entries.first).foregroundStyle(entry.color)
                     } else if entry.variable != "" {
-                        Text("0").foregroundStyle(.secondary)
+                        Text("0").foregroundStyle(.white)
                     }
                 }
             }

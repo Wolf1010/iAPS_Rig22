@@ -1,5 +1,6 @@
 import Combine
 import CoreData
+import DanaKit
 import LoopKitUI
 import SwiftDate
 import SwiftUI
@@ -78,6 +79,12 @@ extension Home {
         @Published var timeSettings: Bool = true
         @Published var useCalc: Bool = true
         @Published var minimumSMB: Decimal = 0.3
+        //
+        @Published var cannulaAge: String?
+        @Published var isConnected: Bool = false
+        @Published var bluetooth: Bool = true
+        @Published var cannulaDate: Date?
+        //
         @Published var maxBolus: Decimal = 0
         @Published var maxBolusValue: Decimal = 1
         @Published var useInsulinBars: Bool = false
@@ -284,6 +291,42 @@ extension Home {
                 }
             }
             setupOverrideHistory()
+        }
+
+        // Verbindung zur HomeRootView
+        func specialDanaKitFunction() {
+            guard let pumpManager = provider.apsManager.pumpManager as? DanaKitPumpManager else {
+                return
+            }
+
+            if let cannulaDate = pumpManager.state.cannulaDate {
+                // cannulaAge = formatToDaysAndHours(cannulaDate)
+                cannulaAge = formatToTotalHours(cannulaDate)
+
+            } else {
+                cannulaAge = "--" // Wenn kein Datum vorhanden ist
+            }
+
+            isConnected = pumpManager.state.isConnected
+        }
+
+        private func formatToDaysAndHours(_ date: Date) -> String {
+            let secondsInADay: TimeInterval = 86400
+            let secondsInAnHour: TimeInterval = 3600
+
+            let days = String(format: "%.0f", -date.timeIntervalSinceNow / secondsInADay)
+            let hours = String(
+                format: "%.0f",
+                (-date.timeIntervalSinceNow.truncatingRemainder(dividingBy: secondsInADay)) / secondsInAnHour
+            )
+
+            return "\(days)d \(hours)h"
+        }
+
+        private func formatToTotalHours(_ date: Date) -> String {
+            let secondsInAnHour: TimeInterval = 3600
+            let totalHours = -date.timeIntervalSinceNow / secondsInAnHour
+            return String(format: "%.0fh", totalHours)
         }
 
         func cancelTempTarget() {

@@ -298,7 +298,7 @@ struct MainChartView: View {
     }
 
     private func yGridView(fullSize: CGSize) -> some View {
-        let useColour = displayYgridLines ? Color.white : Color.clear
+        let useColour = displayYgridLines ? Color.white : Color.white
         return ZStack {
             Path { path in
                 let range = glucoseYRange
@@ -344,6 +344,7 @@ struct MainChartView: View {
             return Text(glucoseFormatter.string(from: value as NSNumber)!)
                 .position(CGPoint(x: fullSize.width - 12, y: range.minY + CGFloat(line) * yStep))
                 .font(.bolusDotFont)
+                .foregroundStyle(Color.white)
                 .asAny()
         }
     }
@@ -402,7 +403,7 @@ struct MainChartView: View {
     @Environment(\.colorScheme) var colorScheme
 
     private func xGridView(fullSize: CGSize) -> some View {
-        let useColour = displayXgridLines ? Color.white : Color.clear
+        let useColour = displayXgridLines ? Color.white : Color.white
         return ZStack {
             Path { path in
                 for hour in 0 ..< hours + hours {
@@ -424,7 +425,7 @@ struct MainChartView: View {
                 path.addLine(to: CGPoint(x: x, y: fullSize.height - 20))
             }
             .stroke(
-                colorScheme == .dark ? Color.white : Color.black,
+                colorScheme == .dark ? Color.white : Color.white,
                 style: StrokeStyle(lineWidth: 0.5, dash: [5])
             )
         }
@@ -536,6 +537,7 @@ struct MainChartView: View {
                         .overlay {
                             Text(type).font(.announcementSymbolFont).foregroundStyle(.orange)
                                 .offset(x: 0, y: -15)
+                                .foregroundStyle(Color.white)
                         }
                     // Image("owl").resizable().frame(maxWidth: Config.owlSeize, maxHeight: Config.owlSeize).scaledToFill()
                 }.position(position).asAny()
@@ -596,7 +598,7 @@ struct MainChartView: View {
         ZStack {
             let bolusPath = useInsulinBars ? insulinBar() : bolusPath
             bolusPath.fill(Color.insulin)
-            bolusPath.stroke(Color.primary, lineWidth: 0.3)
+            bolusPath.stroke(Color.white, lineWidth: 0.3)
 
             if useInsulinBars {
                 ForEach(bolusDots, id: \.rect.minX) { info -> AnyView in
@@ -606,6 +608,7 @@ struct MainChartView: View {
                     Text(info.value >= minimumSMB ? (bolusFormatter.string(from: info.value as NSNumber) ?? "") : "")
                         .rotationEffect(Angle(degrees: -90))
                         .font(bolusFont())
+                        .foregroundStyle(Color.white)
                         .position(position)
                         .asAny()
                 }
@@ -614,6 +617,7 @@ struct MainChartView: View {
                     let position = CGPoint(x: info.rect.midX, y: info.rect.minY - 8)
                     return Text(info.value >= minimumSMB ? (bolusFormatter.string(from: info.value as NSNumber) ?? "") : "")
                         .font(.bolusDotFont)
+                        .foregroundStyle(Color.white)
                         .position(position)
                         .asAny()
                 }
@@ -635,11 +639,12 @@ struct MainChartView: View {
             carbsPath
                 .fill(Color.loopYellow)
             carbsPath
-                .stroke(Color.primary, lineWidth: 0.5)
+                .stroke(Color.white, lineWidth: 0.5)
 
             ForEach(carbsDots, id: \.rect.minX) { info -> AnyView in
                 let position = CGPoint(x: info.rect.midX, y: info.rect.maxY + 8)
                 return Text(carbsFormatter.string(from: info.value as NSNumber)!).font(.carbsDotFont)
+                    .foregroundStyle(Color.white)
                     .position(position)
                     .asAny()
             }
@@ -657,7 +662,7 @@ struct MainChartView: View {
             fpuPath
                 .fill(.orange.opacity(0.5))
             fpuPath
-                .stroke(Color.primary, lineWidth: 0.2)
+                .stroke(Color.white, lineWidth: 0.2)
         }
         .onChange(of: carbs) { _ in
             calculateFPUsDots(fullSize: fullSize)

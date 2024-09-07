@@ -30,15 +30,23 @@ struct ActiveCOBView: View {
             ).foregroundStyle(Color(.loopYellow))
         }
         .chartYAxis {
-            AxisMarks(values: .automatic(desiredCount: 3))
+            AxisMarks(values: .automatic(desiredCount: 3)) { _ in
+                AxisValueLabel()
+                    .foregroundStyle(Color.white) // Y-Achsenbeschriftung auf Weiß
+                AxisGridLine()
+                    .foregroundStyle(Color.white) // Y-Achsen-Gitterlinien auf Weiß
+            }
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: .hour, count: 2)) { _ in
                 AxisValueLabel(
                     format: .dateTime.hour(.defaultDigits(amPM: .omitted))
-                        .locale(Locale(identifier: "sv")) // Force 24h
+                        .locale(Locale(identifier: "sv")) // 24-Stunden-Format erzwingen
                 )
+                .foregroundStyle(Color.white) // X-Achsenbeschriftung auf Weiß
+
                 AxisGridLine()
+                    .foregroundStyle(Color.white) // X-Achsen-Gitterlinien auf Weiß
             }
         }
         .chartYScale(
@@ -47,5 +55,6 @@ struct ActiveCOBView: View {
         .chartXScale(
             domain: Date.now.addingTimeInterval(-1.days.timeInterval) ... Date.now
         )
+        .foregroundStyle(Color.white) // Allgemeiner Stil auf Weiß setzen
     }
 }

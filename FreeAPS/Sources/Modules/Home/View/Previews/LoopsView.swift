@@ -14,23 +14,29 @@ struct LoopsView: View {
 
             Text(NSLocalizedString("Loops", comment: "") + " / " + NSLocalizedString("Readings", comment: ""))
                 .padding(.bottom, 10).font(.previewHeadline)
-
+                .foregroundStyle(Color.white)
             loopChart(percentage: percentage)
 
             HStack {
                 Text("Average Interval")
                 Text(loopStatistics.3)
-            }.font(.loopFont)
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(Color.white)
 
             HStack {
                 Text("Readings")
                 Text("\(readings)")
-            }.font(.loopFont)
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(Color.white)
 
             HStack {
                 Text("Loops")
                 Text("\(loops)")
-            }.font(.loopFont)
+            }
+            .font(.system(size: 13))
+            .foregroundStyle(Color.white)
         }
         .padding(.top, 20)
         .padding(.bottom, 15)
@@ -56,7 +62,8 @@ struct LoopsView: View {
                 )
                 .annotation(position: .overlay) {
                     Text(percentage.formatted(.number.grouping(.never).rounded().precision(.fractionLength(1))) + " %")
-                        .font(.loopFont)
+                        .font(.system(size: 15))
+                        .foregroundStyle(Color.white)
                         .dynamicTypeSize(...DynamicTypeSize.accessibility1)
                 }
             }
