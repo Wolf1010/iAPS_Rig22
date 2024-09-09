@@ -80,10 +80,12 @@ extension Home {
         @Published var useCalc: Bool = true
         @Published var minimumSMB: Decimal = 0.3
         //
-        @Published var cannulaAge: String?
         @Published var isConnected: Bool = false
         @Published var bluetooth: Bool = true
         @Published var cannulaDate: Date?
+        @Published var cannulaAge: String?
+        @Published var reservoirDate: Date?
+        @Published var reservoirAge: String?
         //
         @Published var maxBolus: Decimal = 0
         @Published var maxBolusValue: Decimal = 1
@@ -300,11 +302,17 @@ extension Home {
             }
 
             if let cannulaDate = pumpManager.state.cannulaDate {
-                // cannulaAge = formatToDaysAndHours(cannulaDate)
                 cannulaAge = formatToTotalHours(cannulaDate)
 
             } else {
                 cannulaAge = "--" // Wenn kein Datum vorhanden ist
+            }
+
+            if let reservoirDate = pumpManager.state.reservoirDate {
+                reservoirAge = formatToTotalHours(reservoirDate)
+
+            } else {
+                reservoirAge = "--" // Wenn kein Datum vorhanden ist
             }
 
             isConnected = pumpManager.state.isConnected

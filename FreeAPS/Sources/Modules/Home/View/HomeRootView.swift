@@ -543,8 +543,6 @@ extension Home {
             .frame(maxWidth: .infinity, maxHeight: 30)
         }
 
-        var timer = Timer.publish(every: 30, on: .main, in: .common).autoconnect() // Aktualisiert alle 30 Sekunden
-
         var info: some View {
             HStack(spacing: 10) {
                 // Linker Stack
@@ -620,6 +618,26 @@ extension Home {
                 }
                 .frame(maxWidth: .none)
 
+                // Reservoiralter
+
+                HStack(spacing: 4) {
+                    Image(systemName: "fuelpump")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                        .foregroundColor(.white)
+
+                    if let reservoirAge = state.reservoirAge {
+                        Text("\(reservoirAge)")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+                    } else {
+                        Text("--")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+                    }
+                }
+
                 // Kanülenalter
 
                 HStack(spacing: 4) {
@@ -667,6 +685,8 @@ extension Home {
                 state.specialDanaKitFunction() } // Ruft die Funktion periodisch auf
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
+
+        var timer = Timer.publish(every: 10, on: .main, in: .common).autoconnect() // Aktualisiert alle 10 Sekunden
 
         var infoPanelbottom: some View {
             ZStack {
