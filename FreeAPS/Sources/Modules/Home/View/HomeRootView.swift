@@ -585,23 +585,23 @@ extension Home {
                     .frame(maxWidth: .infinity, alignment: .leading) // Linker HStack links ausgerichtet
                 }
 
-                /*  HStack(spacing: 6) {
-                     Image(systemName: "personalhotspot")
-                         .resizable()
-                         .scaledToFit()
-                         .frame(width: 20, height: 20)
-                         .foregroundColor(.white)
+                HStack(spacing: 6) {
+                    Image(systemName: "personalhotspot")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .foregroundColor(.white)
 
-                     if state.isConnected {
-                         Circle()
-                             .fill(Color.green)
-                             .frame(width: 10, height: 10)
-                     } else {
-                         Circle()
-                             .fill(Color.red)
-                             .frame(width: 10, height: 10)
-                     }
-                 }.padding(.leading, 10)*/
+                    if state.isConnected {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 10, height: 10)
+                    } else {
+                        Circle()
+                            .fill(Color.red)
+                            .frame(width: 10, height: 10)
+                    }
+                }.padding(.leading, 10)
 
                 // Centered HStack
                 HStack(spacing: 0) {
@@ -622,23 +622,23 @@ extension Home {
 
                 // Kanülenalter
 
-                /*  HStack(spacing: 4) {
-                     Image(systemName: "gauge.with.needle")
-                         .resizable()
-                         .scaledToFit()
-                         .frame(width: 16, height: 16)
-                         .foregroundColor(.white)
+                HStack(spacing: 4) {
+                    Image(systemName: "gauge.with.needle")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 16, height: 16)
+                        .foregroundColor(.white)
 
-                     if let cannulaAge = state.cannulaAge {
-                         Text("\(cannulaAge)")
-                             .foregroundColor(.white)
-                             .font(.system(size: 15))
-                     } else {
-                         Text("--")
-                             .foregroundColor(.white)
-                             .font(.system(size: 15))
-                     }
-                 }*/
+                    if let cannulaAge = state.cannulaAge {
+                        Text("\(cannulaAge)")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+                    } else {
+                        Text("--")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+                    }
+                }
 
                 Spacer() // Zentriere den mittleren HStack
 

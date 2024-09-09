@@ -183,13 +183,23 @@ struct LiveActivity: Widget {
                 // Expanded UI goes here.  Compose the expanded UI through
                 // various regions, like leading/trailing/center/bottom
                 DynamicIslandExpandedRegion(.leading) {
-                    bgAndTrend(context: context, size: .expanded).0.font(.title2).padding(.leading, 5)
+                    HStack {
+                        loop(context: context, size: 23)
+                    }.padding(10)
                 }
 
                 DynamicIslandExpandedRegion(.center) {
-                    HStack {
-                        iob(context: context, size: .expanded).font(.title2).padding(.leading, 5)
-                        cob(context: context, size: .expanded).font(.title2).padding(.horizontal, 10)
+                    VStack(spacing: 0) {
+                        HStack {
+                            iob(context: context, size: .expanded).font(.title2).padding(.leading, 10)
+                            Spacer()
+                            cob(context: context, size: .expanded).font(.title2).padding(10)
+                        }
+                        HStack {
+                            bgAndTrend(context: context, size: .expanded).0.font(.title2).padding(.leading, 10)
+                            Spacer()
+                            changeLabel(context: context).font(.title2).padding(10)
+                        }
                     }
                 }
 

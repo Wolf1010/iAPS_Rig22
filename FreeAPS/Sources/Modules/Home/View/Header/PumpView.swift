@@ -10,6 +10,10 @@ struct PumpView: View {
 
     @State var state: Home.StateModel
 
+    @StateObject private var reservoirPieSegmentViewModel = PieSegmentViewModel()
+    @StateObject private var batteryPieSegmentViewModel = PieSegmentViewModel()
+    @StateObject private var podLifePieSegmentViewModel = PieSegmentViewModel()
+
     @Environment(\.colorScheme) var colorScheme
 
     private var reservoirFormatter: NumberFormatter {
@@ -23,83 +27,22 @@ struct PumpView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .percent
         formatter.maximumFractionDigits = 0
-        formatter.multiplier = 1 // Multiplikator auf 1, um den Prozentsatz korrekt darzustellen
+        formatter.multiplier = 1
         return formatter
-    }
-
-    private var numberFormatter: NumberFormatter {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 2
-        return formatter
-    }
-
-    private var dateFormatter: DateFormatter {
-        let dateFormatter = DateFormatter()
-        dateFormatter.timeStyle = .short
-        return dateFormatter
-    }
-
-    struct PieSegment: View {
-        var fillFraction: CGFloat
-        var color: Color
-        var backgroundColor: Color
-        var displayText: String?
-        var symbol: String? // SF Symbol als String
-        var customImage: Image? // Custom Image als Image
-        var symbolSize: CGFloat = 26
-
-        var body: some View {
-            VStack(spacing: 8) {
-                ZStack {
-                    // Hintergrundkreis
-                    Circle()
-                        .fill(backgroundColor)
-                        .opacity(0.3)
-                        .frame(width: 50, height: 50)
-
-                    // Gefüllter Pie-Slice
-                    PieSliceView(
-                        startAngle: .degrees(-90.0),
-                        endAngle: .degrees(-90.0 + Double(360.0 * fillFraction))
-                    )
-                    .fill(color)
-                    .animation(.easeInOut, value: fillFraction)
-                    .opacity(0.6)
-
-                    // Symbol im Pie-Segment: Entweder SF-Symbol oder benutzerdefiniertes Bild
-                    if let symbol = symbol {
-                        Image(systemName: symbol)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: symbolSize, height: symbolSize)
-                            .foregroundColor(.white)
-                            .opacity(1.0)
-                    } else if let customImage = customImage {
-                        customImage
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: symbolSize, height: symbolSize)
-                            .opacity(1.0)
-                    }
-                }
-                .frame(width: 50, height: 50)
-                .offset(y: 3)
-
-                if let displayText = displayText {
-                    Text(displayText)
-                        .font(.system(size: 16))
-                        .foregroundColor(.white)
-                        .offset(y: 0)
-                }
-            }
-            .frame(width: 50)
-        }
     }
 
     struct PieSliceView: Shape {
         var startAngle: Angle
         var endAngle: Angle
+        var animatableData: AnimatablePair<Double, Double> {
+            get {
+                AnimatablePair(startAngle.degrees, endAngle.degrees)
+            }
+            set {
+                startAngle = Angle(degrees: newValue.first)
+                endAngle = Angle(degrees: newValue.second)
+            }
+        }
 
         func path(in rect: CGRect) -> Path {
             var path = Path()
@@ -117,9 +60,73 @@ struct PumpView: View {
         }
     }
 
+    class PieSegmentViewModel: ObservableObject {
+        @Published var progress: Double = 0.0
+
+        func updateProgress(to newValue: CGFloat, animate: Bool) {
+            if animate {
+                withAnimation(.easeInOut(duration: 2.5)) {
+                    self.progress = Double(newValue)
+                }
+            } else {
+                progress = Double(newValue)
+            }
+        }
+    }
+
+    struct FillablePieSegment: View {
+        @ObservedObject var pieSegmentViewModel: PieSegmentViewModel
+
+        var fillFraction: CGFloat
+        var color: Color
+        var backgroundColor: Color
+        var displayText: String
+        var symbolSize: CGFloat
+        var symbol: String
+        var animateProgress: Bool
+
+        var body: some View {
+            VStack {
+                ZStack {
+                    Circle()
+                        .fill(backgroundColor)
+                        .opacity(0.3)
+                        .frame(width: 50, height: 50)
+
+                    PieSliceView(
+                        startAngle: .degrees(-90),
+                        endAngle: .degrees(-90 + Double(pieSegmentViewModel.progress * 360))
+                    )
+                    .fill(color)
+                    .frame(width: 50, height: 50)
+                    .opacity(0.6)
+
+                    Image(systemName: symbol)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: symbolSize, height: symbolSize)
+                        .foregroundColor(.white)
+                }
+
+                Text(displayText)
+                    .font(.system(size: 16))
+                    .foregroundColor(.white)
+                    .padding(.top, 0)
+            }
+            .offset(y: 10)
+            .onAppear {
+                pieSegmentViewModel.updateProgress(to: fillFraction, animate: animateProgress)
+            }
+            .onChange(of: fillFraction) { newValue in
+                pieSegmentViewModel.updateProgress(to: newValue, animate: true)
+            }
+        }
+    }
+
     var body: some View {
         HStack(spacing: 8) {
-            let maxValue: Decimal = state.pumpName.contains("Omni") ? Decimal(200) : Decimal(300)
+            // Berechnung von maxValue basierend auf dem Pumpen-Namen
+            let maxValue: Decimal = name.contains("Omni") ? Decimal(200) : Decimal(300)
 
             // Reservoir-Anzeige
             if let reservoir = reservoir {
@@ -127,14 +134,16 @@ struct PumpView: View {
                 let fill = max(min(fraction, 1.0), 0.0)
                 let reservoirSymbol = "fuelpump"
 
-                PieSegment(
+                FillablePieSegment(
+                    pieSegmentViewModel: reservoirPieSegmentViewModel,
                     fillFraction: fill,
                     color: reservoirColor,
                     backgroundColor: .gray,
                     displayText: reservoir == Decimal(0xDEAD_BEEF) ? "50+" :
                         "\(reservoirFormatter.string(from: reservoir as NSNumber) ?? "")U",
-                    symbol: reservoirSymbol, // SF Symbol für das Reservoir
-                    symbolSize: 26
+                    symbolSize: 26,
+                    symbol: reservoirSymbol,
+                    animateProgress: true
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
@@ -146,87 +155,83 @@ struct PumpView: View {
             }
 
             // Batterieanzeige
-            if let battery = battery, !state.pumpName.contains("Omni") {
+            if let battery = battery, !name.contains("Omni") {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
                 let batteryText = "\(Int(batteryFraction * 100))%"
                 let batterySymbol = "macpro.gen2"
 
-                PieSegment(
+                FillablePieSegment(
+                    pieSegmentViewModel: batteryPieSegmentViewModel,
                     fillFraction: batteryFill,
                     color: batteryColor,
                     backgroundColor: .gray,
                     displayText: batteryText,
-                    symbol: batterySymbol, // SF Symbol für Batterie
-                    symbolSize: 26
+                    symbolSize: 26,
+                    symbol: batterySymbol,
+                    animateProgress: true
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
-            } /* else if state.pumpName.contains("Omni") {
-                 // Pod Reservoir Anzeige mit benutzerdefiniertem Bild
-                 PieSegment(
-                     fillFraction: 1.0,
-                     color: batteryColor,
-                     backgroundColor: .gray,
-                     displayText: "Pod",
-                     symbol: nil, // Kein SF Symbol
-                     customImage: Image("pod_reservoir"), // Benutzerdefiniertes Bild
-                     symbolSize: 26
-                 )
-                 .padding(.trailing, 8)
-                 .layoutPriority(1)
-             } */
+            }
 
-            // Pod-Lebensdauer
-            if let date = expiresAtDate {
-                let remainingTimeMinutes = date.timeIntervalSince(timerDate) / 1.minutes.timeInterval
-                let remainingTimeHours = date.timeIntervalSince(timerDate) / 1.hours.timeInterval
-                let remainingTimePercent = Float(remainingTimeHours * 100 / 72)
+            // Pod-Lebensdauer-Anzeige
+            if let expiresAt = expiresAtDate {
+                let remainingTime = expiresAt.timeIntervalSince(timerDate)
+                let remainingTimeHours = remainingTime / 3600
+                let podLifeFraction = CGFloat(remainingTimeHours / 72) // 72 Stunden für einen Pod
+                let podLifeFill = max(min(podLifeFraction, 1.0), 0.0)
 
-                let hours = Int(remainingTimeHours.rounded())
-                let minutes = Int(remainingTimeMinutes)
+                let hours = Int(remainingTimeHours)
+                let minutes = Int(remainingTime.truncatingRemainder(dividingBy: 3600) / 60)
 
-                let batteryFraction = CGFloat(remainingTimePercent) / 100.0
-                let batteryFill = max(min(batteryFraction, 1.0), 0.0)
-                // let batterySymbol = "macpro.gen2" // brauchen wir nicht
+                let podLifeText = hours > 2 ? "\(hours)h" : "\(minutes)m"
+                let podSymbol = "drop.fill"
 
-                PieSegment(
-                    fillFraction: batteryFill,
-                    color: PodColor(percent: remainingTimePercent),
-                    backgroundColor: (hours < 2 && minutes < 0) ? .red : .gray, // .gray,
-                    displayText: hours > 2 ? "\(hours)h" : "\(minutes)m",
-                    symbol: nil, // Kein SF Symbol
-                    customImage: Image("pod_reservoir"), // Benutzerdefiniertes Bild
-                    symbolSize: 26
+                FillablePieSegment(
+                    pieSegmentViewModel: podLifePieSegmentViewModel,
+                    fillFraction: podLifeFill,
+                    color: podLifeColor(remainingTimeHours),
+                    backgroundColor: .gray,
+                    displayText: podLifeText,
+                    symbolSize: 26,
+                    symbol: podSymbol,
+                    animateProgress: true
                 )
                 .padding(.trailing, 8)
                 .layoutPriority(1)
-            } else if state.pumpName.contains("Omni") {
-                Text("No Pod").font(.statusFont).foregroundStyle(Color.white)
-                    .offset(x: 0, y: -4)
+            } else if name.contains("Omni") {
+                Text("No Pod")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.white)
             }
         }
         .offset(x: 0, y: 5)
+        .onAppear {
+            let maxValueOnAppear: Decimal = name.contains("Omni") ? Decimal(200) : Decimal(300)
+            let reservoirFillFraction = CGFloat(truncating: (reservoir ?? 0) as NSNumber) /
+                CGFloat(truncating: maxValueOnAppear as NSNumber)
+            reservoirPieSegmentViewModel.updateProgress(to: reservoirFillFraction, animate: true)
+            batteryPieSegmentViewModel.updateProgress(to: CGFloat(battery?.percent ?? 0) / 100, animate: true)
+
+            if let expiresAt = expiresAtDate {
+                let remainingTime = expiresAt.timeIntervalSince(timerDate)
+                let remainingTimeHours = remainingTime / 3600
+                let podLifeFraction = CGFloat(remainingTimeHours / 72)
+                podLifePieSegmentViewModel.updateProgress(to: podLifeFraction, animate: true)
+            }
+        }
     }
 
-    private func remainingTime(time: TimeInterval) -> some View {
-        HStack {
-            if time > 0 {
-                let days = Int(time / 1.days.timeInterval)
-                let hours = Int(time / 1.hours.timeInterval)
-                let minutes = Int(time / 1.minutes.timeInterval)
-                if days >= 1 {
-                    Text(" \(days)" + NSLocalizedString("d", comment: "abbreviation for days" + "+"))
-                } else if hours >= 1 {
-                    Text(" \(hours)" + NSLocalizedString("h", comment: "abbreviation for hours"))
-                        .foregroundStyle(time < 4 * 60 * 60 ? .red : .primary)
-                } else {
-                    Text(" \(minutes)" + NSLocalizedString("m", comment: "abbreviation for minutes"))
-                        .foregroundStyle(time < 4 * 60 * 60 ? .red : .primary)
-                }
-            } else {
-                Text(NSLocalizedString("Replace", comment: "View/Header when pod expired")).foregroundStyle(.red)
-            }
+    // Pod-Lebensdauer-Farbe
+    private func podLifeColor(_ remainingHours: Double) -> Color {
+        switch remainingHours {
+        case ...0:
+            return .red
+        case ...12:
+            return .yellow
+        default:
+            return .green
         }
     }
 
@@ -235,19 +240,6 @@ struct PumpView: View {
             return .gray
         }
         switch percent {
-        case ...25:
-            return .red
-        case ...50:
-            return .yellow
-        default:
-            return .green
-        }
-    }
-
-    private func PodColor(percent: Float) -> Color {
-        switch percent {
-        case ...0:
-            return .gray
         case ...25:
             return .red
         case ...50:

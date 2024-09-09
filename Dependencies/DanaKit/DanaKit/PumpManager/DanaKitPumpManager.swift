@@ -90,14 +90,7 @@ public class DanaKitPumpManager: DeviceManager {
         let index = (basalIntervals.firstIndex(where: { $0 > nowTimeInterval}) ?? 24) - 1
         return self.state.basalSchedule.indices.contains(index) ? self.state.basalSchedule[index] : 0
     }
-    //
-   // public func isBluetoothConnected() -> Bool {
-   //     return bluetooth.isConnected
-   // }
-    
-   // var isConnected: Bool { bluetooth.isConnected != nil }
-    var isConnected: Bool { bluetooth.isConnected }
-    //
+
     public var status: PumpManagerStatus {
         return self.status(state)
     }
