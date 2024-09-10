@@ -114,7 +114,7 @@ public class DanaKitPumpManager: DeviceManager {
         
         self.bluetooth.disconnect(self.bluetooth.peripheral!, force: force)
     }
-    
+ //
     public func disconnect(_ peripheral: CBPeripheral, _ force: Bool = false) {
         self.bluetooth.disconnect(peripheral, force: force)
         self.state.resetState()

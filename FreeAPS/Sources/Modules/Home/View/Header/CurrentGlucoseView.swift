@@ -9,9 +9,10 @@ struct CurrentGlucoseView: View {
     @Binding var lowGlucose: Decimal
     @Binding var highGlucose: Decimal
 
-    @State private var rotationDegrees: Double = 0.0
     @State private var angularGradient = AngularGradient(colors: [
     ], center: .center, startAngle: .degrees(270), endAngle: .degrees(-90))
+    @State private var rotationDegrees: Double = 0
+    @State private var bumpEffect: Double = 0 // Separate Variable für den Bump
 
     @Environment(\.colorScheme) var colorScheme
 
@@ -67,10 +68,13 @@ struct CurrentGlucoseView: View {
             startAngle: .degrees(0),
             endAngle: .degrees(360)
         )
+
         ZStack {
-            // Nutze den Gradient anstelle der Farbe
-            TrendShape(gradient: angularGradient, color: triangleColor)
-                .rotationEffect(.degrees(rotationDegrees))
+            CircleShape(gradient: angularGradient)
+
+            TriangleShape(color: triangleColor)
+                .rotationEffect(.degrees(rotationDegrees + bumpEffect))
+                .animation(.easeInOut(duration: 3.0), value: rotationDegrees)
 
             VStack(alignment: .center) {
                 HStack {
@@ -109,35 +113,32 @@ struct CurrentGlucoseView: View {
             }
         }
         .onChange(of: recentGlucose?.direction) { newDirection in
-            withAnimation {
-                switch newDirection {
-                case .doubleUp,
-                     .singleUp,
-                     .tripleUp:
-                    rotationDegrees = -90
-
-                case .fortyFiveUp:
-                    rotationDegrees = -45
-
-                case .flat:
-                    rotationDegrees = 0
-
-                case .fortyFiveDown:
-                    rotationDegrees = 45
-
-                case .doubleDown,
-                     .singleDown,
-                     .tripleDown:
-                    rotationDegrees = 90
-
-                case .none,
-                     .notComputable,
-                     .rateOutOfRange:
-                    rotationDegrees = 0
-
-                @unknown default:
-                    rotationDegrees = 0
-                }
+            switch newDirection {
+            case .doubleUp,
+                 .singleUp,
+                 .tripleUp:
+                rotationDegrees = -90
+            case .fortyFiveUp:
+                rotationDegrees = -45
+            case .flat:
+                rotationDegrees = 0
+            case .fortyFiveDown:
+                rotationDegrees = 45
+            case .doubleDown,
+                 .singleDown,
+                 .tripleDown:
+                rotationDegrees = 90
+            case .none,
+                 .notComputable,
+                 .rateOutOfRange:
+                rotationDegrees = 0
+            @unknown default:
+                rotationDegrees = 0
+            }
+            // Schneller Bump-Effekt auf separater Variable
+            withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.1)) {
+                bumpEffect = 5 // Schneller Bump nach der Rotation
+                bumpEffect = 0 // Zurücksetzen
             }
         }
     }
@@ -161,21 +162,6 @@ struct CurrentGlucoseView: View {
     }
 }
 
-struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY + 15))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-
-        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY), control: CGPoint(x: rect.midX, y: rect.midY + 13))
-
-        path.closeSubpath()
-
-        return path
-    }
-}
-
 struct TrendShape: View {
     @Environment(\.colorScheme) var colorScheme
 
@@ -188,8 +174,11 @@ struct TrendShape: View {
                 Group {
                     CircleShape(gradient: gradient)
                     TriangleShape(color: color)
-                }.shadow(color: Color.black.opacity(colorScheme == .dark ? 0.75 : 0.33), radius: colorScheme == .dark ? 5 : 3)
-                CircleShape(gradient: gradient)
+                }
+                .shadow(
+                    color: Color.black.opacity(colorScheme == .dark ? 0.75 : 0.33),
+                    radius: colorScheme == .dark ? 5 : 3
+                )
             }
         }
     }
@@ -228,5 +217,18 @@ struct TriangleShape: View {
             .frame(width: 35, height: 35)
             .rotationEffect(.degrees(90))
             .offset(x: 80)
+    }
+}
+
+struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+
+        path.move(to: CGPoint(x: rect.midX, y: rect.minY + 15))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY), control: CGPoint(x: rect.midX, y: rect.midY + 13))
+        path.closeSubpath()
+
+        return path
     }
 }

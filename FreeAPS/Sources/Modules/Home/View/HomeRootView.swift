@@ -555,7 +555,7 @@ extension Home {
 
                         if state.units == .mmolL {
                             Text(
-                                glucoseFormatter.string(from: currentISF.asMmolL as NSNumber) ?? " "
+                                glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
                             )
                             .font(.system(size: 16))
                         } else {
@@ -649,11 +649,11 @@ extension Home {
 
                     if let cannulaAge = state.cannulaAge {
                         Text("\(cannulaAge)")
-                            .foregroundColor(.white)
+                             .foregroundStyle(Color.white)
                             .font(.system(size: 15))
                     } else {
                         Text("--")
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.white)
                             .font(.system(size: 15))
                     }
                 }

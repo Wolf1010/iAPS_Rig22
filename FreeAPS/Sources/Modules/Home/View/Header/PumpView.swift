@@ -82,6 +82,7 @@ struct PumpView: View {
         var backgroundColor: Color
         var displayText: String
         var symbolSize: CGFloat
+        var customImage: Image? // Custom Image als Image
         var symbol: String
         var animateProgress: Bool
 
@@ -101,11 +102,20 @@ struct PumpView: View {
                     .frame(width: 50, height: 50)
                     .opacity(0.6)
 
-                    Image(systemName: symbol)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: symbolSize, height: symbolSize)
-                        .foregroundColor(.white)
+                    if symbol.isEmpty {
+                        customImage?
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: symbolSize, height: symbolSize)
+                            .opacity(1.0)
+                    } else {
+                        Image(systemName: symbol)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: symbolSize, height: symbolSize)
+                            .foregroundColor(.white)
+                            .opacity(1.0)
+                    }
                 }
 
                 Text(displayText)
@@ -125,10 +135,8 @@ struct PumpView: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            // Berechnung von maxValue basierend auf dem Pumpen-Namen
-            let maxValue: Decimal = name.contains("Omni") ? Decimal(200) : Decimal(300)
+            let maxValue: Decimal = name.contains("Omni") ? Decimal(50) : Decimal(300)
 
-            // Reservoir-Anzeige
             if let reservoir = reservoir {
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
@@ -145,6 +153,7 @@ struct PumpView: View {
                     symbol: reservoirSymbol,
                     animateProgress: true
                 )
+
                 .padding(.trailing, 8)
                 .layoutPriority(1)
             } else {
@@ -154,7 +163,6 @@ struct PumpView: View {
                     .offset(x: -22, y: 0)
             }
 
-            // Batterieanzeige
             if let battery = battery, !name.contains("Omni") {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
@@ -175,27 +183,31 @@ struct PumpView: View {
                 .layoutPriority(1)
             }
 
-            // Pod-Lebensdauer-Anzeige
             if let expiresAt = expiresAtDate {
-                let remainingTime = expiresAt.timeIntervalSince(timerDate)
-                let remainingTimeHours = remainingTime / 3600
-                let podLifeFraction = CGFloat(remainingTimeHours / 72) // 72 Stunden für einen Pod
-                let podLifeFill = max(min(podLifeFraction, 1.0), 0.0)
+                let remainingTimeMinutes = expiresAt.timeIntervalSince(timerDate) / 1.minutes.timeInterval
+                let remainingTimeHours = expiresAt.timeIntervalSince(timerDate) / 1.hours.timeInterval
+                // let remainingTimePercent = Float(remainingTimeHours * 100 / 72)
 
-                let hours = Int(remainingTimeHours)
-                let minutes = Int(remainingTime.truncatingRemainder(dividingBy: 3600) / 60)
+                let hours = Int(remainingTimeHours.rounded())
+                let minutes = Int(remainingTimeMinutes)
 
-                let podLifeText = hours > 2 ? "\(hours)h" : "\(minutes)m"
-                let podSymbol = "drop.fill"
+                // let remainingTime = expiresAt.timeIntervalSince(timerDate)
+                let podLifeFraction = CGFloat(remainingTimeHours / 72)
+
+                // let hours = Int(remainingTimeHours)
+                // let minutes = Int(remainingTime.truncatingRemainder(dividingBy: 3600) / 60)
+
+                let podLifeText = hours >= 1 ? "\(hours)h" : "\(minutes)m"
 
                 FillablePieSegment(
                     pieSegmentViewModel: podLifePieSegmentViewModel,
-                    fillFraction: podLifeFill,
+                    fillFraction: podLifeFraction,
                     color: podLifeColor(remainingTimeHours),
-                    backgroundColor: .gray,
+                    backgroundColor: (hours < 2 && minutes < 0) ? .red : .gray, // wenn Pod Restlaufzeit negativ, Hintergrund rot
                     displayText: podLifeText,
                     symbolSize: 26,
-                    symbol: podSymbol,
+                    customImage: Image("pod_reservoir"),
+                    symbol: "",
                     animateProgress: true
                 )
                 .padding(.trailing, 8)
@@ -223,10 +235,9 @@ struct PumpView: View {
         }
     }
 
-    // Pod-Lebensdauer-Farbe
     private func podLifeColor(_ remainingHours: Double) -> Color {
         switch remainingHours {
-        case ...0:
+        case ...3:
             return .red
         case ...12:
             return .yellow
