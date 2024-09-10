@@ -649,7 +649,7 @@ extension Home {
 
                     if let cannulaAge = state.cannulaAge {
                         Text("\(cannulaAge)")
-                             .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.white)
                             .font(.system(size: 15))
                     } else {
                         Text("--")
@@ -1015,6 +1015,43 @@ extension Home {
                 }
         }
 
+        /*    var profileView: some View {
+             HStack(spacing: 0) {
+                 if let override = fetchedPercent.first {
+                     if override.enabled {
+                         if override.isPreset {
+                             let profile = fetchedProfiles.first(where: { $0.id == override.id })
+                             if let currentProfile = profile {
+                                 if let name = currentProfile.name, name != "EMPTY", name.nonEmpty != nil, name != "",
+                                    name != "\u{0022}\u{0022}"
+                                 {
+                                     if name.count > 15 {
+                                         let shortened = name.prefix(15)
+                                         Text(shortened).font(.statusFont).foregroundStyle(.white)
+                                     } else {
+                                         Text(name).font(.statusFont).foregroundStyle(.white)
+                                     }
+                                 }
+                             }
+
+                         } else if override.percentage != 100 {
+                             Text(override.percentage.formatted() + " %").font(.statusFont).foregroundStyle(.white)
+                         } else if override.smbIsOff, !override.smbIsAlwaysOff {
+                             Text("No ").font(.statusFont).foregroundStyle(.white) // "No" as in no SMBs
+                             Image(systemName: "syringe")
+                                 .font(.previewNormal).foregroundStyle(.white)
+                         } else if override.smbIsOff {
+                             Image(systemName: "clock").font(.statusFont).foregroundStyle(.white)
+                             Image(systemName: "syringe")
+                                 .font(.previewNormal).foregroundStyle(.white)
+                         } else {
+                             Text("Override").font(.statusFont).foregroundStyle(.white)
+                         }
+                     }
+                 }
+             }
+         }*/
+
         var profileView: some View {
             HStack(spacing: 0) {
                 if let override = fetchedPercent.first {
@@ -1027,24 +1064,24 @@ extension Home {
                                 {
                                     if name.count > 15 {
                                         let shortened = name.prefix(15)
-                                        Text(shortened).font(.statusFont).foregroundStyle(.white)
+                                        Text(shortened).font(.statusFont).foregroundStyle(.secondary)
                                     } else {
-                                        Text(name).font(.statusFont).foregroundStyle(.white)
+                                        Text(name).font(.statusFont).foregroundStyle(.secondary)
                                     }
                                 }
-                            }
+                            } else { Text("📉") } // Hypo Treatment is not actually a preset
                         } else if override.percentage != 100 {
-                            Text(override.percentage.formatted() + " %").font(.statusFont).foregroundStyle(.white)
+                            Text(override.percentage.formatted() + " %").font(.statusFont).foregroundStyle(.secondary)
                         } else if override.smbIsOff, !override.smbIsAlwaysOff {
-                            Text("No ").font(.statusFont).foregroundStyle(.white) // "No" as in no SMBs
+                            Text("No ").font(.statusFont).foregroundStyle(.secondary) // "No" as in no SMBs
                             Image(systemName: "syringe")
-                                .font(.previewNormal).foregroundStyle(.white)
+                                .font(.previewNormal).foregroundStyle(.secondary)
                         } else if override.smbIsOff {
-                            Image(systemName: "clock").font(.statusFont).foregroundStyle(.white)
+                            Image(systemName: "clock").font(.statusFont).foregroundStyle(.secondary)
                             Image(systemName: "syringe")
-                                .font(.previewNormal).foregroundStyle(.white)
+                                .font(.previewNormal).foregroundStyle(.secondary)
                         } else {
-                            Text("Override").font(.statusFont).foregroundStyle(.white)
+                            Text("Override").font(.statusFont).foregroundStyle(.secondary)
                         }
                     }
                 }

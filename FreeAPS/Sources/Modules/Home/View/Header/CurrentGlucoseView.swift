@@ -56,13 +56,20 @@ struct CurrentGlucoseView: View {
 
         let angularGradient = AngularGradient(
             gradient: Gradient(colors: [
-                Color.blue.opacity(0.2),
-                Color.blue.opacity(0.3),
-                Color.blue.opacity(0.4),
-                Color.blue.opacity(0.4),
-                Color.blue.opacity(0.4),
-                Color.blue.opacity(0.3),
-                Color.blue.opacity(0.2)
+                /* Color.blue.opacity(0.2),
+                 Color.blue.opacity(0.3),
+                 Color.blue.opacity(0.4),
+                 Color.blue.opacity(0.4),
+                 Color.blue.opacity(0.4),
+                 Color.blue.opacity(0.3),
+                 Color.blue.opacity(0.2)*/
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6),
+                Color.blue.opacity(0.6)
             ]),
             center: .center,
             startAngle: .degrees(0),
