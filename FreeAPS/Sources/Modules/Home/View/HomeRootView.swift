@@ -535,156 +535,367 @@ extension Home {
             }
         }
 
+        func reservoirColor(for reservoirAge: String?) -> Color {
+            if let reservoirAge = reservoirAge {
+                // Entfernt das letzte Zeichen des Stringes (hier das "h")
+                let cleanedReservoirAge = reservoirAge.trimmingCharacters(in: .letters)
+
+                if let ageInHours = Int(cleanedReservoirAge) {
+                    switch ageInHours {
+                    case 240...:
+                        return .red
+                    case 192 ..< 239:
+                        return .yellow
+                    default:
+                        return .white
+                    }
+                }
+            }
+            return .gray
+        }
+
+        func cannulaColor(for cannulaAge: String?) -> Color {
+            if let cannulaAge = cannulaAge {
+                // Entfernt das letzte Zeichen des Stringes (hier das "h")
+                let cleanedCannulaAge = cannulaAge.trimmingCharacters(in: .letters)
+
+                if let ageInHours = Int(cleanedCannulaAge) {
+                    switch ageInHours {
+                    case 72...:
+                        return .red
+                    case 48 ..< 72:
+                        return .yellow
+                    default:
+                        return .white
+                    }
+                }
+            }
+            return .gray
+        }
+
         var infoPanel: some View {
             ZStack {
                 addBackground()
                 info
             }
-            .frame(maxWidth: .infinity, maxHeight: 30)
+            .frame(maxWidth: .infinity, maxHeight: 50)
         }
 
+        // Zweireihiger InfoPanel
         var info: some View {
-            HStack(spacing: 10) {
-                // Linker Stack
-                if let currentISF = state.isf {
-                    HStack(spacing: 2) {
-                        Text("ISF:")
+            VStack(spacing: 10) {
+                // Erste Reihe
+                HStack(spacing: 10) {
+                    // Linker Stack - state.isf
+                    if let currentISF = state.isf {
+                        HStack(spacing: 2) {
+                            Text("ISF:")
+                                .foregroundColor(.white)
+                                .font(.system(size: 15))
+
+                            if state.units == .mmolL {
+                                Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
+                                    .foregroundStyle(Color.white)
+                                    .font(.system(size: 15))
+                            } else {
+                                Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
+                                    .foregroundStyle(Color.white)
+                                    .font(.system(size: 15))
+                            }
+                        }
+                        .padding(.leading, 10)
+                        .frame(maxWidth: 80, alignment: .leading) // Links ausgerichtet
+                    }
+
+                    // Mittlerer Stack mit GeometryReader für dynamische Verteilung
+                    GeometryReader { geometry in
+                        HStack(spacing: geometry.size.width * 0.05) { // Dynamischer Abstand basierend auf der Breite
+                            if state.pumpSuspended {
+                                Text("Pump suspended")
+                                    .font(.extraSmall)
+                                    .bold()
+                                    .foregroundStyle(Color.white)
+                            }
+
+                            if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
+                                Text(tempTargetString)
+                                    .font(.buttonFont)
+                                    .foregroundStyle(Color.white)
+                            } else {
+                                profileView
+                            }
+
+                            if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
+                                Text("Check Max IOB Setting")
+                                    .font(.extraSmall)
+                                    .foregroundColor(.orange)
+                            }
+                        }
+                        .frame(width: geometry.size.width, alignment: .center) // Zentriert im verfügbaren Platz
+                    }
+                    .frame(maxWidth: .infinity)
+
+                    // Rechter Stack - TDD
+                    HStack {
+                        Text("TDD:" + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0"))
+                            .font(.system(size: 14))
                             .foregroundColor(.white)
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.white)
+                            .padding(.trailing, 5)
+                    }
+                    .frame(maxWidth: 80, alignment: .trailing) // Rechts ausgerichtet
+                }
+                // Zweite Reihe
+                HStack(spacing: 10) {
+                    // Connection Status
+                    HStack(spacing: 6) {
+                        Image(systemName: "personalhotspot")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
+                            .foregroundColor(state.isConnected ? .white : .gray)
 
-                        if state.units == .mmolL {
-                            Text(
-                                glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
-                            )
-                            .font(.system(size: 16))
+                        if state.isConnected {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 10, height: 10)
                         } else {
-                            Text(
-                                glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
-                            )
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.white)
-
-                            /*  if state.pumpSuspended {
-                                 Text("Pump suspended")
-                                     .font(.extraSmall)
-                                     .bold()
-                                     .foregroundStyle(Color.white)
-                             }
-
-                             if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
-                                 Text("Check Max IOB Setting")
-                                     .font(.extraSmall)
-                                     .foregroundColor(.orange)
-                             }*/
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 10, height: 10)
                         }
                     }
                     .padding(.leading, 10)
-                    .frame(maxWidth: .infinity, alignment: .leading) // Linker HStack links ausgerichtet
-                }
-
-                HStack(spacing: 6) {
-                    Image(systemName: "personalhotspot")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 20, height: 20)
-                        .foregroundColor(.white)
-
-                    if state.isConnected {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 10, height: 10)
-                    } else {
-                        Circle()
-                            .fill(Color.red)
-                            .frame(width: 10, height: 10)
+                    .onTapGesture {
+                        if state.pumpDisplayState != nil {
+                            state.setupPump = true
+                        }
                     }
-                }.padding(.leading, 10)
 
-                // Centered HStack
-                HStack(spacing: 0) {
-                    //    HStack(alignment: .top) {
-                    //       Spacer()
-                    //  }
-                    //  .padding(.bottom, 5)
+                    HStack(spacing: 4) {
+                        Image(systemName: "fuelpump")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .foregroundStyle(reservoirColor(for: state.reservoirAge))
 
-                    if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
-                        Text(tempTargetString)
-                            .font(.buttonFont)
-                            .foregroundStyle(Color.white)
-                    } else {
-                        profileView
+                        if let reservoirAge = state.reservoirAge {
+                            Text("\(reservoirAge)")
+                                // .foregroundColor(.white)
+                                .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                                .font(.system(size: 15))
+                        } else {
+                            Text("--")
+                                .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                                .font(.system(size: 15))
+                        }
                     }
-                }
-                .frame(maxWidth: .none)
+                    .onTapGesture {
+                        if state.pumpDisplayState != nil {
+                            state.setupPump = true
+                        }
+                    }
 
-                // Reservoiralter
+                    // Kanülenalter
 
-                HStack(spacing: 4) {
-                    Image(systemName: "fuelpump")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                        .foregroundColor(.white)
+                    HStack(spacing: 4) {
+                        Image(systemName: "gauge.with.needle")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 16, height: 16)
+                            .foregroundStyle(cannulaColor(for: state.cannulaAge))
 
-                    if let reservoirAge = state.reservoirAge {
-                        Text("\(reservoirAge)")
-                            .foregroundColor(.white)
-                            .font(.system(size: 15))
-                    } else {
-                        Text("--")
-                            .foregroundColor(.white)
-                            .font(.system(size: 15))
+                        if let cannulaAge = state.cannulaAge {
+                            Text("\(cannulaAge)")
+                                .foregroundStyle(cannulaColor(for: state.cannulaAge))
+                                .font(.system(size: 15))
+                        } else {
+                            Text("--")
+                                .foregroundColor(.gray)
+                                .font(.system(size: 15))
+                        }
+                    }
+                    .onTapGesture {
+                        if state.pumpDisplayState != nil {
+                            state.setupPump = true
+                        }
                     }
                 }
-
-                // Kanülenalter
-
-                HStack(spacing: 4) {
-                    Image(systemName: "gauge.with.needle")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 16, height: 16)
-                        .foregroundColor(.white)
-
-                    if let cannulaAge = state.cannulaAge {
-                        Text("\(cannulaAge)")
-                            .foregroundStyle(Color.white)
-                            .font(.system(size: 15))
-                    } else {
-                        Text("--")
-                            .foregroundStyle(Color.white)
-                            .font(.system(size: 15))
-                    }
-                }
-
-                Spacer() // Zentriere den mittleren HStack
-
-                // Rechter Stack
-                HStack {
-                    Text(
-                        "TDD:" + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0")
-                    )
-                    .font(.system(size: 15))
-                    .foregroundColor(.white)
-                    .frame(alignment: .trailing) // rechts ausrichten
-                    .padding(.trailing, 5) // optionaler Abstand vom Rand
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing) // Rechter HStack rechts ausgerichtet
-
-                /* Text(
-                     //numberFormatter.string(from: state.tddChange as NSNumber) ?? "0"
-                     // "ytd. " + (numberFormatter.string(from: state.tddYesterday as NSNumber) ?? "0")
-                 )*/
-                .font(.system(size: 15))
-                .foregroundColor(.white)
-                .frame(alignment: .trailing) // rechts ausrichten
-                .padding(.trailing, 5) // optionaler Abstand vom Rand
             }
+
             .onReceive(timer) { _ in
-                state.specialDanaKitFunction() } // Ruft die Funktion periodisch auf
+                state.specialDanaKitFunction()
+            } // Ruft die Funktion periodisch auf
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
+
+        // Alles auf einer Linie
+        /*        var info: some View {
+             HStack(spacing: 10) {
+                 // Linker Stack
+                 if let currentISF = state.isf {
+                     HStack(spacing: 2) {
+                         Text("ISF:")
+                             .foregroundColor(.white)
+                             .font(.system(size: 16))
+                             .foregroundStyle(Color.white)
+
+                         if state.units == .mmolL {
+                             Text(
+                                 glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
+                             )
+                             .font(.system(size: 16))
+                         } else {
+                             Text(
+                                 glucoseFormatter.string(from: currentISF as NSNumber) ?? " "
+                             )
+                             .font(.system(size: 16))
+                             .foregroundStyle(Color.white)
+
+                             /*  if state.pumpSuspended {
+                                  Text("Pump suspended")
+                                      .font(.extraSmall)
+                                      .bold()
+                                      .foregroundStyle(Color.white)
+                              }
+
+                              if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
+                                  Text("Check Max IOB Setting")
+                                      .font(.extraSmall)
+                                      .foregroundColor(.orange)
+                              }*/
+                         }
+                     }
+                     .padding(.leading, 10)
+                     .frame(maxWidth: .infinity, alignment: .leading) // Linker HStack links ausgerichtet
+                 }
+           /*      HStack(spacing: 6) {
+                     Image("pumpe")
+                         .resizable(resizingMode: .stretch)
+                         .frame(width: IAPSconfig.iconSize * 1.0, height: IAPSconfig.iconSize * 1.6)
+                         // .foregroundStyle(Color.white)
+                         .foregroundColor(state.isConnected ? .white : .gray)
+                 }*/
+
+                 HStack(spacing: 6) {
+                     Image(systemName: "personalhotspot")
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: 20, height: 20)
+                         .foregroundColor(state.isConnected ? .white : .gray)
+
+                     if state.isConnected {
+                         Circle()
+                             .fill(Color.green)
+                             .frame(width: 10, height: 10)
+                     } else {
+                         Circle()
+                             .fill(Color.red)
+                             .frame(width: 10, height: 10)
+                     }
+                 }
+                 .padding(.leading, 10)
+                 .onTapGesture {
+                     if state.pumpDisplayState != nil {
+                         state.setupPump = true
+                     }
+                 }
+
+                 // Centered HStack
+                 HStack(spacing: 0) {
+                     //    HStack(alignment: .top) {
+                     //       Spacer()
+                     //  }
+                     //  .padding(.bottom, 5)
+
+                     if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
+                         Text(tempTargetString)
+                             .font(.buttonFont)
+                             .foregroundStyle(Color.white)
+                     } else {
+                         profileView
+                     }
+                 }
+                 .frame(maxWidth: .none)
+
+                 // Reservoiralter
+
+                 HStack(spacing: 4) {
+                     Image(systemName: "fuelpump")
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: 16, height: 16)
+                         .foregroundStyle(reservoirColor(for: state.reservoirAge))
+
+                     if let reservoirAge = state.reservoirAge {
+                         Text("\(reservoirAge)")
+                             // .foregroundColor(.white)
+                             .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                             .font(.system(size: 15))
+                     } else {
+                         Text("--")
+                             .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                             .font(.system(size: 15))
+                     }
+                 }
+                 .onTapGesture {
+                     if state.pumpDisplayState != nil {
+                         state.setupPump = true
+                     }
+                 }
+
+                 // Kanülenalter
+
+                 HStack(spacing: 4) {
+                     Image(systemName: "gauge.with.needle")
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: 16, height: 16)
+                         .foregroundStyle(cannulaColor(for: state.cannulaAge))
+
+                     if let cannulaAge = state.cannulaAge {
+                         Text("\(cannulaAge)")
+                             .foregroundStyle(cannulaColor(for: state.cannulaAge))
+                             .font(.system(size: 15))
+                     } else {
+                         Text("--")
+                             .foregroundColor(.gray)
+                             .font(.system(size: 15))
+                     }
+                 }
+                 .onTapGesture {
+                     if state.pumpDisplayState != nil {
+                         state.setupPump = true
+                     }
+                 }
+
+                 Spacer() // Zentriere den mittleren HStack
+
+                 // Rechter Stack
+                 HStack {
+                     Text(
+                         "TDD:" + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0")
+                     )
+                     .font(.system(size: 15))
+                     .foregroundColor(.white)
+                     .frame(alignment: .trailing) // rechts ausrichten
+                     .padding(.trailing, 5) // optionaler Abstand vom Rand
+                 }
+                 .frame(maxWidth: .infinity, alignment: .trailing) // Rechter HStack rechts ausgerichtet
+
+                 // TDD Unterschied zu gestern
+                 /* Text(
+                      //numberFormatter.string(from: state.tddChange as NSNumber) ?? "0"
+                      // "ytd. " + (numberFormatter.string(from: state.tddYesterday as NSNumber) ?? "0")
+                  )*/
+                 .font(.system(size: 15))
+                 .foregroundColor(.white)
+                 .frame(alignment: .trailing) // rechts ausrichten
+                 .padding(.trailing, 5) // optionaler Abstand vom Rand
+             }
+             .onReceive(timer) { _ in
+                 state.specialDanaKitFunction() } // Ruft die Funktion periodisch auf
+             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+         }*/
 
         var timer = Timer.publish(every: 10, on: .main, in: .common).autoconnect() // Aktualisiert alle 10 Sekunden
 
@@ -1015,43 +1226,6 @@ extension Home {
                 }
         }
 
-        /*    var profileView: some View {
-             HStack(spacing: 0) {
-                 if let override = fetchedPercent.first {
-                     if override.enabled {
-                         if override.isPreset {
-                             let profile = fetchedProfiles.first(where: { $0.id == override.id })
-                             if let currentProfile = profile {
-                                 if let name = currentProfile.name, name != "EMPTY", name.nonEmpty != nil, name != "",
-                                    name != "\u{0022}\u{0022}"
-                                 {
-                                     if name.count > 15 {
-                                         let shortened = name.prefix(15)
-                                         Text(shortened).font(.statusFont).foregroundStyle(.white)
-                                     } else {
-                                         Text(name).font(.statusFont).foregroundStyle(.white)
-                                     }
-                                 }
-                             }
-
-                         } else if override.percentage != 100 {
-                             Text(override.percentage.formatted() + " %").font(.statusFont).foregroundStyle(.white)
-                         } else if override.smbIsOff, !override.smbIsAlwaysOff {
-                             Text("No ").font(.statusFont).foregroundStyle(.white) // "No" as in no SMBs
-                             Image(systemName: "syringe")
-                                 .font(.previewNormal).foregroundStyle(.white)
-                         } else if override.smbIsOff {
-                             Image(systemName: "clock").font(.statusFont).foregroundStyle(.white)
-                             Image(systemName: "syringe")
-                                 .font(.previewNormal).foregroundStyle(.white)
-                         } else {
-                             Text("Override").font(.statusFont).foregroundStyle(.white)
-                         }
-                     }
-                 }
-             }
-         }*/
-
         var profileView: some View {
             HStack(spacing: 0) {
                 if let override = fetchedPercent.first {
@@ -1064,9 +1238,9 @@ extension Home {
                                 {
                                     if name.count > 15 {
                                         let shortened = name.prefix(15)
-                                        Text(shortened).font(.statusFont).foregroundStyle(.secondary)
+                                        Text(shortened).font(.system(size: 15)).foregroundStyle(Color.white)
                                     } else {
-                                        Text(name).font(.statusFont).foregroundStyle(.secondary)
+                                        Text(name).font(.system(size: 15)).foregroundStyle(Color.white)
                                     }
                                 }
                             } else { Text("📉") } // Hypo Treatment is not actually a preset
