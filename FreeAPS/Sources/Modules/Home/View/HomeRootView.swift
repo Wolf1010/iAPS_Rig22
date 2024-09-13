@@ -251,7 +251,7 @@ extension Home {
                                                 Image(systemName: "chart.xyaxis.line")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: 18, height: 18)
+                                                    .frame(width: 16, height: 16)
                                                     .foregroundColor(.white)
 
                                                 if let tempBasalString = tempBasalString {
@@ -375,7 +375,7 @@ extension Home {
                                     Spacer()
                                     loopView
                                         .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 15)
+                                        .padding(.bottom, 10)
                                     Spacer()
                                     pumpView
                                         .frame(maxHeight: .infinity, alignment: .bottom)
