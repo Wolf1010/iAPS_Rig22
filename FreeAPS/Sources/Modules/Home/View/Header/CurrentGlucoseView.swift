@@ -143,9 +143,9 @@ struct CurrentGlucoseView: View {
                 rotationDegrees = 0
             }
             // Schneller Bump-Effekt auf separater Variable
-            withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.1)) {
+            withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.5)) {
                 bumpEffect = 5 // Schneller Bump nach der Rotation
-                bumpEffect = 0 // Zurücksetzen
+                bumpEffect = 0 // wird das auskommentiert gibt es eine langasame Animation
             }
         }
     }

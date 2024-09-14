@@ -581,7 +581,7 @@ extension Home {
             .frame(maxWidth: .infinity, maxHeight: 50)
         }
 
-        // Zweireihiger InfoPanel
+        // Zweireihiger InfoPanel mit Dana Status Anzeigen
         var info: some View {
             VStack(spacing: 10) {
                 // Erste Reihe
@@ -646,79 +646,152 @@ extension Home {
                 }
                 // Zweite Reihe
                 HStack(spacing: 10) {
+                    // PumpenBatterie
+
+                    /*  HStack(spacing: 2) {
+
+                         let color: Color = {
+                             if let batteryChargeString = state.pumpBatteryChargeRemaining,
+                                let batteryCharge = Double(batteryChargeString)
+                             {
+                                 switch batteryCharge {
+                                 case ...25:
+                                     return .red
+                                 case ...50:
+                                     return .yellow
+                                 default:
+                                     return .white
+                                 }
+                             } else {
+                                 return .gray
+                             }
+                         }()
+
+                         Image(systemName: "macpro.gen2")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 16, height: 16)
+                             .foregroundColor(color)
+
+                         if let batteryCharge = state.pumpBatteryChargeRemaining {
+                             Text("\(batteryCharge)%")
+                                 .foregroundColor(color)
+                                 .font(.system(size: 15))
+                         } else {
+                             Text("--")
+                                 .foregroundColor(.gray)
+                                 .font(.system(size: 15))
+                         }
+                     }
+                     .onTapGesture {
+                         if state.pumpDisplayState != nil {
+                             state.setupPump = true
+                         }
+                     }*/
+
                     // Connection Status
-                    HStack(spacing: 6) {
-                        Image(systemName: "personalhotspot")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 20, height: 20)
-                            .foregroundColor(state.isConnected ? .white : .gray)
 
-                        if state.isConnected {
-                            Circle()
-                                .fill(Color.green)
-                                .frame(width: 10, height: 10)
-                        } else {
-                            Circle()
-                                .fill(Color.red)
-                                .frame(width: 10, height: 10)
-                        }
-                    }
-                    .padding(.leading, 10)
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
-                        }
-                    }
+                    /*   HStack(spacing: 5) {
+                         Image(systemName: "personalhotspot")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 20, height: 20)
+                             .foregroundColor(state.isConnected ? .white : .gray)
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "fuelpump")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
-                            .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                         if state.isConnected {
+                             Circle()
+                                 .fill(Color.green)
+                                 .frame(width: 10, height: 10)
+                         } else {
+                             Circle()
+                                 .fill(Color.red)
+                                 .frame(width: 10, height: 10)
+                         }
+                     }
+                     // .padding(.leading, 4)
+                     .onTapGesture {
+                         if state.pumpDisplayState != nil {
+                             state.setupPump = true
+                         }
+                     } */
 
-                        if let reservoirAge = state.reservoirAge {
-                            Text("\(reservoirAge)")
-                                // .foregroundColor(.white)
-                                .foregroundStyle(reservoirColor(for: state.reservoirAge))
-                                .font(.system(size: 15))
-                        } else {
-                            Text("--")
-                                .foregroundStyle(reservoirColor(for: state.reservoirAge))
-                                .font(.system(size: 15))
-                        }
-                    }
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
-                        }
-                    }
+                    // Insulin Typ
+
+                    /*  HStack(spacing: 4) {
+                         let color: Color = $state.insulinType.wrappedValue != nil ? .white : .gray
+
+                         Image(systemName: "cross.vial")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 16, height: 16)
+                             .foregroundColor(color) // Icon wird entsprechend der Bedingung gefärbt
+
+                         if let insulinType = $state.insulinType.wrappedValue {
+                             Text("\(insulinType)")
+                                 .foregroundColor(.white) // Text in Weiß, wenn insulinType vorhanden
+                                 .font(.system(size: 15))
+                         } else {
+                             Text("--")
+                                 .foregroundColor(.gray) // Text in Grau, wenn kein insulinType vorhanden
+                                 .font(.system(size: 15))
+                         }
+                     }
+                     .onTapGesture {
+                         if state.pumpDisplayState != nil {
+                             state.setupPump = true
+                         }
+                     }*/
+
+                    // Reservoir Alter
+
+                    /*  HStack(spacing: 4) {
+                         Image(systemName: "fuelpump")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 16, height: 16)
+                             .foregroundStyle(reservoirColor(for: state.reservoirAge))
+
+                         if let reservoirAge = state.reservoirAge {
+                             Text("\(reservoirAge)")
+                                 // .foregroundColor(.white)
+                                 .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                                 .font(.system(size: 15))
+                         } else {
+                             Text("--")
+                                 .foregroundStyle(reservoirColor(for: state.reservoirAge))
+                                 .font(.system(size: 15))
+                         }
+                     }
+                     .onTapGesture {
+                         if state.pumpDisplayState != nil {
+                             state.setupPump = true
+                         }
+                     }*/
 
                     // Kanülenalter
 
-                    HStack(spacing: 4) {
-                        Image(systemName: "gauge.with.needle")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 16, height: 16)
-                            .foregroundStyle(cannulaColor(for: state.cannulaAge))
+                    /*   HStack(spacing: 4) {
+                         Image(systemName: "gauge.with.needle")
+                             .resizable()
+                             .scaledToFit()
+                             .frame(width: 16, height: 16)
+                             .foregroundStyle(cannulaColor(for: state.cannulaAge))
 
-                        if let cannulaAge = state.cannulaAge {
-                            Text("\(cannulaAge)")
-                                .foregroundStyle(cannulaColor(for: state.cannulaAge))
-                                .font(.system(size: 15))
-                        } else {
-                            Text("--")
-                                .foregroundColor(.gray)
-                                .font(.system(size: 15))
-                        }
-                    }
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
-                        }
-                    }
+                         if let cannulaAge = state.cannulaAge {
+                             Text("\(cannulaAge)")
+                                 .foregroundStyle(cannulaColor(for: state.cannulaAge))
+                                 .font(.system(size: 15))
+                         } else {
+                             Text("--")
+                                 .foregroundColor(.gray)
+                                 .font(.system(size: 15))
+                         }
+                     }
+                     .onTapGesture {
+                         if state.pumpDisplayState != nil {
+                             state.setupPump = true
+                         }
+                     }*/
                 }
             }
 
