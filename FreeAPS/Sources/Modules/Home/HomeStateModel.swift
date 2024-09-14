@@ -80,12 +80,14 @@ extension Home {
         @Published var useCalc: Bool = true
         @Published var minimumSMB: Decimal = 0.3
         //
+        @Published var pumpBatteryChargeRemaining: String?
         @Published var isConnected: Bool = false
         @Published var bluetooth: Bool = true
         @Published var cannulaDate: Date?
         @Published var cannulaAge: String?
         @Published var reservoirDate: Date?
         @Published var reservoirAge: String?
+        @Published var insulinType: String?
         //
         @Published var maxBolus: Decimal = 0
         @Published var maxBolusValue: Decimal = 1
@@ -319,7 +321,19 @@ extension Home {
                 reservoirAge = "--" // Wenn kein Datum vorhanden ist
             }
 
+            /*  var insulinTypeText: String?
+
+             if let insulinType = pumpManager.state.insulinType {
+                 insulinTypeText = String(describing: insulinType)
+             } else {
+                 insulinTypeText = "--"
+             }*/
+
             isConnected = pumpManager.state.isConnected
+
+            // Direkt zuweisen, wenn batteryRemaining immer einen Wert hat
+            let batteryCharge = pumpManager.state.batteryRemaining
+            pumpBatteryChargeRemaining = String(format: "%.0f", batteryCharge)
         }
 
         private func formatToDaysAndHours(_ date: Date) -> String {
