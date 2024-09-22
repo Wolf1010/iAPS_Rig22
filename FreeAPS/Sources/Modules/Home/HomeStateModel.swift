@@ -79,16 +79,6 @@ extension Home {
         @Published var timeSettings: Bool = true
         @Published var useCalc: Bool = true
         @Published var minimumSMB: Decimal = 0.3
-        //
-        @Published var pumpBatteryChargeRemaining: String?
-        @Published var isConnected: Bool = false
-        @Published var bluetooth: Bool = true
-        @Published var cannulaDate: Date?
-        @Published var cannulaAge: String?
-        @Published var reservoirDate: Date?
-        @Published var reservoirAge: String?
-        @Published var insulinType: String?
-        //
         @Published var maxBolus: Decimal = 0
         @Published var maxBolusValue: Decimal = 1
         @Published var useInsulinBars: Bool = false
@@ -101,6 +91,18 @@ extension Home {
         @Published var tdd3DaysAgo: Decimal = 0
         @Published var tddActualAverage: Decimal = 0
         @Published var skipGlucoseChart: Bool = false
+        // specialDanaKitFunction
+        @Published var pumpBatteryChargeRemaining: String?
+        @Published var isConnected: Bool = false
+        @Published var bluetooth: Bool = true
+        @Published var cannulaDate: Date?
+        @Published var cannulaAge: String?
+        @Published var cannulaHours: Double?
+        @Published var reservoirDate: Date?
+        @Published var reservoirLevel: Double? = 0
+        @Published var reservoirAge: String?
+        @Published var insulinType: String?
+        //
 
         let coredataContext = CoreDataStack.shared.persistentContainer.viewContext
 
@@ -301,37 +303,31 @@ extension Home {
             setupOverrideHistory()
         }
 
-        // Verbindung zur HomeRootView
+        // DanaKitspecial Funktions
         func specialDanaKitFunction() {
             guard let pumpManager = provider.apsManager.pumpManager as? DanaKitPumpManager else {
                 return
             }
 
             if let cannulaDate = pumpManager.state.cannulaDate {
-                cannulaAge = formatToTotalHours(cannulaDate)
+                cannulaHours = -cannulaDate.timeIntervalSinceNow / 3600 // Store as Double
+                cannulaAge = String(format: "%.0fh", cannulaHours ?? 0) // Store for display
 
             } else {
-                cannulaAge = "--" // Wenn kein Datum vorhanden ist
+                cannulaHours = nil
+                cannulaAge = "--"
             }
 
             if let reservoirDate = pumpManager.state.reservoirDate {
-                reservoirAge = formatToTotalHours(reservoirDate)
+                reservoirAge = formatToDaysAndHours(reservoirDate)
 
             } else {
                 reservoirAge = "--" // Wenn kein Datum vorhanden ist
             }
 
-            /*  var insulinTypeText: String?
-
-             if let insulinType = pumpManager.state.insulinType {
-                 insulinTypeText = String(describing: insulinType)
-             } else {
-                 insulinTypeText = "--"
-             }*/
-
+            reservoirLevel = pumpManager.state.reservoirLevel
             isConnected = pumpManager.state.isConnected
 
-            // Direkt zuweisen, wenn batteryRemaining immer einen Wert hat
             let batteryCharge = pumpManager.state.batteryRemaining
             pumpBatteryChargeRemaining = String(format: "%.0f", batteryCharge)
         }

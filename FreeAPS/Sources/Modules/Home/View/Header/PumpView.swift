@@ -4,7 +4,7 @@ struct PumpView: View {
     @Binding var reservoir: Decimal?
     @Binding var battery: Battery?
     @Binding var name: String
-    @Binding var expiresAtDate: Date?
+    //  @Binding var expiresAtDate: Date?
     @Binding var timerDate: Date
     @Binding var timeZone: TimeZone?
 
@@ -12,7 +12,6 @@ struct PumpView: View {
 
     @StateObject private var reservoirPieSegmentViewModel = PieSegmentViewModel()
     @StateObject private var batteryPieSegmentViewModel = PieSegmentViewModel()
-    @StateObject private var podLifePieSegmentViewModel = PieSegmentViewModel()
 
     @Environment(\.colorScheme) var colorScheme
 
@@ -140,7 +139,7 @@ struct PumpView: View {
             if let reservoir = reservoir {
                 let fraction = CGFloat(truncating: (reservoir / maxValue) as NSNumber)
                 let fill = max(min(fraction, 1.0), 0.0)
-                let reservoirSymbol = "fuelpump"
+                let reservoirSymbol = "cross.vial"
 
                 FillablePieSegment(
                     pieSegmentViewModel: reservoirPieSegmentViewModel,
@@ -163,7 +162,7 @@ struct PumpView: View {
                     .offset(x: -22, y: 0)
             }
 
-            if let battery = battery, !name.contains("Omni") {
+            if let battery = battery {
                 let batteryFraction = CGFloat(battery.percent ?? 0) / 100.0
                 let batteryFill = max(min(batteryFraction, 1.0), 0.0)
                 let batteryText = "\(Int(batteryFraction * 100))%"
@@ -182,41 +181,6 @@ struct PumpView: View {
                 .padding(.trailing, 8)
                 .layoutPriority(1)
             }
-
-            if let expiresAt = expiresAtDate {
-                let remainingTimeMinutes = expiresAt.timeIntervalSince(timerDate) / 1.minutes.timeInterval
-                let remainingTimeHours = expiresAt.timeIntervalSince(timerDate) / 1.hours.timeInterval
-                // let remainingTimePercent = Float(remainingTimeHours * 100 / 72)
-
-                let hours = Int(remainingTimeHours.rounded())
-                let minutes = Int(remainingTimeMinutes)
-
-                // let remainingTime = expiresAt.timeIntervalSince(timerDate)
-                let podLifeFraction = CGFloat(remainingTimeHours / 72)
-
-                // let hours = Int(remainingTimeHours)
-                // let minutes = Int(remainingTime.truncatingRemainder(dividingBy: 3600) / 60)
-
-                let podLifeText = hours >= 1 ? "\(hours)h" : "\(minutes)m"
-
-                FillablePieSegment(
-                    pieSegmentViewModel: podLifePieSegmentViewModel,
-                    fillFraction: podLifeFraction,
-                    color: podLifeColor(remainingTimeHours),
-                    backgroundColor: (hours < 2 && minutes < 0) ? .red : .gray, // wenn Pod Restlaufzeit negativ, Hintergrund rot
-                    displayText: podLifeText,
-                    symbolSize: 26,
-                    customImage: Image("pod_reservoir"),
-                    symbol: "",
-                    animateProgress: true
-                )
-                .padding(.trailing, 8)
-                .layoutPriority(1)
-            } else if name.contains("Omni") {
-                Text("No Pod")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.white)
-            }
         }
         .offset(x: 0, y: 5)
         .onAppear {
@@ -225,24 +189,6 @@ struct PumpView: View {
                 CGFloat(truncating: maxValueOnAppear as NSNumber)
             reservoirPieSegmentViewModel.updateProgress(to: reservoirFillFraction, animate: true)
             batteryPieSegmentViewModel.updateProgress(to: CGFloat(battery?.percent ?? 0) / 100, animate: true)
-
-            if let expiresAt = expiresAtDate {
-                let remainingTime = expiresAt.timeIntervalSince(timerDate)
-                let remainingTimeHours = remainingTime / 3600
-                let podLifeFraction = CGFloat(remainingTimeHours / 72)
-                podLifePieSegmentViewModel.updateProgress(to: podLifeFraction, animate: true)
-            }
-        }
-    }
-
-    private func podLifeColor(_ remainingHours: Double) -> Color {
-        switch remainingHours {
-        case ...3:
-            return .red
-        case ...12:
-            return .yellow
-        default:
-            return .green
         }
     }
 

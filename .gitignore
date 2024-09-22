@@ -49,6 +49,9 @@ Carthage/Build
 # IDEA project files
 .idea/*
 
+# macOS
+.DS_Store
+
 # fastlane
 fastlane/report.xml
 fastlane/Preview.html
