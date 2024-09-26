@@ -16,6 +16,7 @@ struct TempTargetsView: View {
                         VStack(alignment: .leading) {
                             HStack {
                                 Text(target.name)
+
                                 if let until = target.until, until > Date() {
                                     Spacer()
                                     Text(until, style: .timer).foregroundColor(.loopGreen)

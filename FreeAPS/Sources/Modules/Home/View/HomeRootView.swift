@@ -247,6 +247,7 @@ extension Home {
                     maxHeight: fontSize < .extraExtraLarge ? 220 + geo.safeAreaInsets.top : 155 + geo.safeAreaInsets.top
                 )
                 .overlay {
+                    infoPanelTop
                     VStack {
                         ZStack {
                             // Dynamisches Layout mit GeometryReader
@@ -276,9 +277,8 @@ extension Home {
                                         // GlucoseView bleibt zentriert
                                         glucoseView
                                             .frame(
-                                                width: geometry.size
-                                                    .width * 0.33
-                                            ) // Breite für GlucoseView
+                                                width: geometry.size.width * 0.33
+                                            )
                                             .overlay(
                                                 ZStack {
                                                     if let progress = state.bolusProgress {
@@ -294,10 +294,38 @@ extension Home {
                                                             .fill(Color.rig22BGGlucoseWheel.opacity(1.0))
                                                             .frame(width: 110, height: 110)
 
-                                                        Text("\(Int(progress * 100))%")
-                                                            .font(.system(size: 22))
-                                                            .foregroundColor(.white)
-                                                            .offset(x: 4)
+                                                        VStack {
+                                                            Circle()
+                                                                .fill(Color.red.opacity(1.0))
+                                                                .frame(width: 20, height: 20)
+                                                                .overlay(
+                                                                    Image(systemName: "xmark")
+                                                                        .font(.system(size: 13))
+                                                                        .foregroundColor(.white)
+                                                                        .onTapGesture {
+                                                                            state.cancelBolus()
+                                                                        }
+                                                                )
+                                                                .padding(.bottom, 5)
+                                                            if let progress = state.bolusProgress,
+                                                               let amount = state.bolusAmount
+                                                            {
+                                                                // Anzeigen des Bolusfortschritts
+                                                                let bolusedValue = amount * progress
+                                                                let bolused = bolusProgressFormatter
+                                                                    .string(from: bolusedValue as NSNumber) ?? ""
+                                                                let formattedAmount = amount
+                                                                    .formatted(.number.precision(.fractionLength(2)))
+
+                                                                let bolusText =
+                                                                    "\(bolused) \(NSLocalizedString("/", comment: "")) \(formattedAmount) \(NSLocalizedString("U", comment: ""))"
+
+                                                                Text(bolusText)
+                                                                    .font(.system(size: 14))
+                                                                    .foregroundStyle(Color.white)
+                                                                    .offset(y: 2)
+                                                            }
+                                                        }
                                                     }
                                                 }
                                             )
@@ -329,47 +357,9 @@ extension Home {
                                     }
 
                                     .padding(.horizontal, 22) // Abstand rechter Rand
-
                                     .padding(.top, -20)
                                 }
                                 .offset(y: 90)
-
-                                // Absolut positioniertes xmark-Icon und bolusing/bolusText oben rechts
-                                if let progress = state.bolusProgress, let amount = state.bolusAmount {
-                                    VStack(alignment: .trailing) {
-                                        HStack {
-                                            // Anzeigen des Bolusfortschritts
-                                            let bolusedValue = amount * progress
-                                            let bolused = bolusProgressFormatter.string(from: bolusedValue as NSNumber) ?? ""
-                                            let formattedAmount = amount.formatted(.number.precision(.fractionLength(2)))
-
-                                            let bolusText =
-                                                "\(bolused) \(NSLocalizedString("/", comment: "")) \(formattedAmount) \(NSLocalizedString("U", comment: ""))"
-
-                                            Text(bolusText)
-                                                .font(.system(size: 15))
-                                                .foregroundStyle(Color.white)
-                                                .offset(y: 2)
-
-                                            Circle()
-                                                .fill(Color.red.opacity(1.0))
-                                                .frame(width: 20, height: 20)
-                                                .overlay(
-                                                    Image(systemName: "xmark")
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.white)
-                                                        .onTapGesture {
-                                                            state.cancelBolus()
-                                                        }
-                                                )
-                                                .padding(.leading, 4) // Abstand zwischen Text und xmark
-                                        }
-                                        .padding(.trailing, 7)
-                                        .padding(.top, 75) // Position ein Stück oberhalb von eventualBG
-                                        Spacer()
-                                    }
-                                    .frame(width: geometry.size.width, height: geometry.size.height, alignment: .topTrailing)
-                                }
                             }
 
                             // Unterer Bereich
@@ -380,7 +370,7 @@ extension Home {
                                     Spacer()
                                     carbsView
                                         .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 20)
+                                        .padding(.bottom, 15)
                                     Spacer()
                                     loopView
                                         .frame(maxHeight: .infinity, alignment: .bottom)
@@ -388,12 +378,8 @@ extension Home {
                                     Spacer()
                                     insulinView
                                         .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 20)
+                                        .padding(.bottom, 15)
                                     Spacer()
-
-                                    /* pumpView
-                                     .frame(maxHeight: .infinity, alignment: .bottom)
-                                     .padding(.bottom, 30)*/
                                 }
                                 .dynamicTypeSize(...DynamicTypeSize.xLarge)
                                 .padding(.horizontal, 10)
@@ -533,7 +519,7 @@ extension Home {
                     }
 
                     Text(displayText)
-                        .font(.system(size: 12)) // Kleinere Schriftgröße
+                        .font(.system(size: 14))
                         .foregroundColor(.white)
                         .padding(.top, 0)
                 }
@@ -554,7 +540,7 @@ extension Home {
             HStack {
                 if let settings = state.settingsManager {
                     HStack(spacing: 0) {
-                        VStack {
+                        ZStack {
                             let substance = Double(state.suggestion?.cob ?? 0)
                             let maxValue = max(Double(settings.preferences.maxCOB), 1)
                             let fraction = CGFloat(substance / maxValue)
@@ -568,9 +554,13 @@ extension Home {
                                 backgroundColor: .gray,
                                 displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")g",
                                 symbolSize: 35,
-                                symbol: carbSymbol,
+                                symbol: "",
                                 animateProgress: true
                             )
+                            Image("carbs3")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 60, height: 60)
                         }
                     }
                 }
@@ -585,7 +575,7 @@ extension Home {
             HStack {
                 if let settings = state.settingsManager {
                     HStack(spacing: 0) {
-                        VStack {
+                        ZStack {
                             let substance = Double(state.suggestion?.iob ?? 0)
                             let maxValue = max(Double(settings.preferences.maxIOB), 1)
                             let fraction = CGFloat(substance / maxValue)
@@ -598,10 +588,14 @@ extension Home {
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
                                 displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")U",
-                                symbolSize: 35,
-                                symbol: insulinSymbol,
+                                symbolSize: 0,
+                                symbol: "",
                                 animateProgress: true
                             )
+                            Image("iob")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 60, height: 60)
                         }
                     }
                 }
@@ -616,45 +610,17 @@ extension Home {
             .frame(maxWidth: .infinity, maxHeight: 100)
         }
 
-        /*   func reservoirColor(for reservoirAge: String?) -> Color {
-             if let reservoirAge = reservoirAge {
-                 // Extrahiere Tage und Stunden
-                 let components = reservoirAge.split(separator: "d")
-                 if components.count == 2 {
-                     let daysString = components[0].trimmingCharacters(in: .whitespaces)
-                     let hoursString = components[1].trimmingCharacters(in: CharacterSet(charactersIn: " h").union(.whitespaces))
-
-                     // Konvertiere Tage und Stunden in Gesamtstunden
-                     if let days = Int(daysString), let hours = Int(hoursString) {
-                         let totalHours = (days * 24) + hours
-
-                         // Färbung basierend auf Gesamtstunden
-                         switch totalHours {
-                         case 240...:
-                             return .red
-                         case 144 ..< 240:
-                             return .yellow
-                         default:
-                             return .white
-                         }
-                     }
-                 }
-             }
-             return .gray
-         }*/
-
         func reservoirLevelColor(for reservoirLevel: Double?) -> Color {
-            guard let level = reservoirLevel else { return .gray }
+            guard let level = reservoirLevel else { return Color.gray.opacity(0.0) }
 
-            switch level {
-            case 0 ..< 19:
-                return .red
-            case 20 ..< 50:
-                return .yellow
-            case 51 ..< 300:
-                return .green
-            default:
-                return .gray
+            if level < 20 {
+                return Color.red.opacity(0.7)
+            } else if level < 50 {
+                return Color.yellow.opacity(0.7)
+            } else if level <= 300 {
+                return Color.green.opacity(0.7)
+            } else {
+                return Color.gray.opacity(0.7)
             }
         }
 
@@ -672,7 +638,7 @@ extension Home {
                     // Reservoir Stand
                     HStack(spacing: 5) {
                         let maxValue = Decimal(300)
-                        let reservoirSymbol = "cross.vial"
+                        // let reservoirSymbol = "cross.vial"
 
                         if let reservoir = state.reservoirLevel {
                             let fraction = CGFloat(
@@ -681,8 +647,6 @@ extension Home {
                             )
                             let fill = max(min(fraction, 1.0), 0.0)
                             let reservoirColor = reservoirLevelColor(for: reservoir)
-
-                            // Reservoir Display Text
                             let displayText: String = {
                                 if reservoir == 0 {
                                     return "--"
@@ -691,23 +655,26 @@ extension Home {
                                 }
                             }()
 
-                            SmallFillablePieSegment(
-                                pieSegmentViewModel: reservoirPieSegmentViewModel,
-                                fillFraction: fill,
-                                color: reservoirColor,
-                                backgroundColor: .gray,
-                                displayText: displayText,
-                                symbolSize: 24,
-                                symbol: reservoirSymbol,
-                                animateProgress: true
-                            )
+                            ZStack {
+                                SmallFillablePieSegment(
+                                    pieSegmentViewModel: reservoirPieSegmentViewModel,
+                                    fillFraction: fill,
+                                    color: reservoirColor,
+                                    backgroundColor: .gray,
+                                    displayText: displayText,
+                                    symbolSize: 24,
+                                    symbol: "",
+                                    animateProgress: true
+                                )
+                                .frame(width: 40, height: 40)
+
+                                Image("vial_2")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 40, height: 40)
+                            }
                             .padding(.trailing, 5)
                             .layoutPriority(1)
-                        }
-                    }
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
                         }
                     }
 
@@ -729,11 +696,23 @@ extension Home {
                                 return Color.gray.opacity(0.0)
                             }
                         }
+
+                        // Batterietext-Logik
+                        let batteryText: String = {
+                            if let batteryChargeString = state.pumpBatteryChargeRemaining,
+                               let batteryCharge = Double(batteryChargeString)
+                            {
+                                return "\(Int(batteryCharge))%"
+                            } else {
+                                return "--"
+                            }
+                        }()
+
                         if let batteryChargeString = state.pumpBatteryChargeRemaining,
                            let batteryCharge = Double(batteryChargeString)
                         {
                             let batteryFraction = CGFloat(batteryCharge) / 100.0
-                            let batteryText = "\(Int(batteryFraction * 100))%"
+                            //  let batteryText = "\(Int(batteryFraction * 100))%"
 
                             HStack {
                                 ZStack {
@@ -744,10 +723,15 @@ extension Home {
                                         backgroundColor: .gray,
                                         displayText: batteryText,
                                         symbolSize: 24,
-                                        symbol: "battery.0percent",
+                                        symbol: "",
                                         animateProgress: true
                                     )
                                     .frame(width: 40, height: 40)
+
+                                    Image("battery")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: 40, height: 40)
                                 }
                                 .padding(.trailing, 5)
                                 .layoutPriority(1)
@@ -760,26 +744,12 @@ extension Home {
                                     .frame(width: 40, height: 40)
 
                                 // Battery Fallback
-                                Image(systemName: "battery.0percent")
+                                Image("battery")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.white)
-
-                                VStack {
-                                    Spacer()
-                                    Text("--")
-                                        .font(.caption)
-                                        .foregroundColor(.white)
-                                        .offset(y: 18)
-                                }
+                                    .frame(width: 40, height: 40)
                             }
                             .padding(.trailing, 5)
-                            .onTapGesture {
-                                if state.pumpDisplayState != nil {
-                                    state.setupPump = true
-                                }
-                            }
                         }
                     }
 
@@ -831,8 +801,7 @@ extension Home {
                                 case 48 ..< 71:
                                     return Color.yellow.opacity(0.7)
                                 case 72...:
-                                    return Color.red.opacity(0.7) // Rot für Werte >= 72 Stunden
-                                default:
+                                    return Color.red.opacity(0.7) default:
                                     return Color.gray.opacity(0.7)
                                 }
                             } else {
@@ -862,11 +831,6 @@ extension Home {
                         .padding(.trailing, 5)
                         .layoutPriority(1)
                     }
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
-                        }
-                    }
 
                     // Bluetooth Connection
                     HStack(spacing: 10) {
@@ -886,100 +850,53 @@ extension Home {
                             )
                             .frame(width: 40, height: 40)
 
-                            Image(state.isConnected ? "bluetooth_white" : "bluetooth_white")
+                            Image("bluetooth")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 40, height: 40)
-                                .offset(y: 2)
                         }
                         .padding(.trailing, 5)
                         .layoutPriority(1)
                     }
-                    .onTapGesture {
-                        if state.pumpDisplayState != nil {
-                            state.setupPump = true
-                        }
+                }
+
+                // Untere Reihe
+                HStack {
+                    if state.pumpSuspended {
+                        Text("Pump suspended")
+                            .font(.extraSmall)
+                            .bold()
+                            .foregroundStyle(Color.orange)
+                            .frame(maxWidth: UIScreen.main.bounds.width * 0.3, alignment: .leading)
+                    }
+
+                    if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
+                        Text(tempTargetString)
+                            .foregroundStyle(Color.white)
+                            .frame(maxWidth: UIScreen.main.bounds.width * 0.4, alignment: .center)
+                    } else {
+                        profileView
+                            .frame(maxWidth: UIScreen.main.bounds.width * 0.4, alignment: .center)
+                    }
+
+                    if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
+                        Text("Check Max IOB Setting")
+                            .font(.extraSmall)
+                            .foregroundColor(.orange)
+                            .frame(maxWidth: UIScreen.main.bounds.width * 0.3, alignment: .trailing)
                     }
                 }
                 .padding(.top, 10)
-                // Untere Reihe
-                HStack(spacing: 10) {
-                    // Linker Stack - state.isf
-                    if let currentISF = state.isf {
-                        HStack(spacing: 2) {
-                            Text("ISF:")
-                                .foregroundColor(.white)
-                                .font(.system(size: 15))
-
-                            if state.units == .mmolL {
-                                Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
-                                    .foregroundStyle(Color.white)
-                                    .font(.system(size: 15))
-                            } else {
-                                Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
-                                    .foregroundStyle(Color.white)
-                                    .font(.system(size: 15))
-                            }
-                        }
-                        .padding(.leading, 10)
-                        .frame(maxWidth: 80, alignment: .leading) // Links ausgerichtet
-                    }
-
-                    // Mittlerer Stack mit GeometryReader für dynamische Verteilung
-                    GeometryReader { geometry in
-                        HStack(spacing: geometry.size.width * 0.05) { // Dynamischer Abstand basierend auf der Breite
-                            if state.pumpSuspended {
-                                Text("Pump suspended")
-                                    .font(.extraSmall)
-                                    .bold()
-                                    .foregroundStyle(Color.white)
-                            }
-
-                            if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
-                                Text(tempTargetString)
-                                    .font(.buttonFont)
-                                    .foregroundStyle(Color.white)
-                                    .padding(.top, 2)
-                            } else {
-                                profileView
-                            }
-
-                            if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
-                                Text("Check Max IOB Setting")
-                                    .font(.extraSmall)
-                                    .foregroundColor(.orange)
-                            }
-                        }
-                        .frame(width: geometry.size.width, alignment: .center) // Zentriert im verfügbaren Platz
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    // Rechter Stack - TDD
-                    HStack {
-                        Text("TDD:" + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0"))
-                            .font(.system(size: 14))
-                            .foregroundColor(.white)
-                            .padding(.trailing, 5)
-                    }
-                    .frame(maxWidth: 80, alignment: .trailing) // Rechts ausgerichtet
-                }
-                .padding(
-                    .top,
-                    10
-                )
             }
-
             .onReceive(timer) { _ in
                 state.specialDanaKitFunction()
             }
-
-            .padding(.bottom, 10)
             .dynamicTypeSize(...DynamicTypeSize.xxLarge)
         }
 
         var timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect() // Aktualisiert alle 5 Sekunden
 
-        var infoPanelbottom: some View {
+        var infoPanelTop: some View {
             ZStack {
                 addBackground()
                 info2
@@ -988,25 +905,45 @@ extension Home {
         }
 
         var info2: some View {
-            HStack(spacing: 10) {
-                if state.pumpSuspended {
-                    Text("Pump suspended")
-                        .font(.extraSmall)
-                        .bold()
-                        .foregroundStyle(Color.orange)
+            HStack(spacing: 25) {
+                // Linker Stack
+                if let currentISF = state.isf {
+                    HStack {
+                        Text("ISF:")
+                            .foregroundColor(.white)
+                            .font(.system(size: 15))
+
+                        if state.units == .mmolL {
+                            Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
+                                .foregroundStyle(Color.white)
+                                .font(.system(size: 15))
+                        } else {
+                            Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
+                                .foregroundStyle(Color.white)
+                                .font(.system(size: 15))
+                        }
+                    }
+                    .padding(.leading, 25)
+                    .frame(maxWidth: 100, alignment: .leading) // Links ausgerichtet
                 }
 
-                if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
-                    Text("Check Max IOB Setting")
-                        .font(.extraSmall).foregroundColor(.orange)
+                // Mittlerer Stack
+                GeometryReader { geometry in
+                    HStack(spacing: geometry.size.width * 0.05) {}
+                        .frame(width: geometry.size.width, alignment: .center)
                 }
+                .frame(maxWidth: .infinity)
 
-                if let tempTargetString = tempTargetString, !(fetchedPercent.first?.enabled ?? false) {
-                    Text(tempTargetString)
-                } else {
-                    profileView
+                // Rechter Stack - TDD
+                HStack {
+                    Text("TDD: " + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0"))
+                        .font(.system(size: 14))
+                        .foregroundColor(.white)
+                        .padding(.trailing, 25)
                 }
+                .frame(maxWidth: 100, alignment: .trailing) // Rechts ausgerichtet
             }
+            .padding(.top, -110)
         }
 
         var loopView: some View {
@@ -1102,8 +1039,8 @@ extension Home {
             // let ratio = state.timeSettings ? 1.61 : 1.44
             // let ratio2 = state.timeSettings ? 1.65 : 1.51
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.91 : 1.71 // TimeSetting true
-            let ratio2 = state.timeSettings ? 1.96 : 1.81 // Timesetting false
+            let ratio = state.timeSettings ? 1.75 : 1.60 // TimeSetting true
+            let ratio2 = state.timeSettings ? 1.85 : 1.70 // Timesetting false
 
             return addBackground()
                 .overlay {
