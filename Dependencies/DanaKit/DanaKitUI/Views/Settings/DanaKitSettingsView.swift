@@ -18,6 +18,8 @@ struct DanaKitSettingsView: View {
     
     @ObservedObject var viewModel: DanaKitSettingsViewModel
     @State private var isSharePresented: Bool = false
+    @State private var showingReservoirCannulaRefillView = false
+    @State private var cannulaOnly = false
     
     var supportedInsulinTypes: [InsulinType]
     var imageName: String
@@ -40,6 +42,20 @@ struct DanaKitSettingsView: View {
                 self.viewModel.syncPumpTime()
             },
             .cancel(Text(LocalizedString("No, Keep Pump As Is", comment: "Button text to cancel pump time sync")))
+        ])
+    }
+    
+    var blindReservoirCannulaRefill: ActionSheet {
+        ActionSheet(title: Text(LocalizedString("Type of refill", comment: "Title for refill action")), buttons: [
+            .default(Text(LocalizedString("Cannula only", comment: "Button text to cannula only"))) {
+                cannulaOnly = true
+                showingReservoirCannulaRefillView = true
+            },
+            .default(Text(LocalizedString("Reservoir and cannula", comment: "Button text to Reservoir and cannula"))) {
+                cannulaOnly = false
+                showingReservoirCannulaRefillView = true
+            },
+            .cancel(Text(LocalizedString("Cancel", comment: "Button text to cancel")))
         ])
     }
     
@@ -69,6 +85,19 @@ struct DanaKitSettingsView: View {
                                       LocalizedString("Yes, Switch to continuous mode", comment: "Button text to enable continuous mode")
                                  )) {
                             self.viewModel.toggleBleMode()
+                        },
+                        .cancel(Text(LocalizedString("No, Keep as is", comment: "Button text to cancel silent tone")))
+                    ])
+    }
+    
+    var disableBolusSync: ActionSheet {
+        ActionSheet(title: Text(LocalizedString(viewModel.isBolusSyncingDisabled ? "Re-enable bolus syncing?" : "Disable bolus syncing?", comment: "Title for bolus syncing disable action sheet")),
+                    buttons: [
+                        .default(Text(viewModel.isBolusSyncingDisabled ?
+                                      LocalizedString("Yes, re-enable bolus syncing", comment: "Button text to re-enable bplus syncing") :
+                                      LocalizedString("Yes, disable bolus syncing", comment: "Button text to disable bplus syncing")
+                                 )) {
+                            self.viewModel.toggleBolusSyncing()
                         },
                         .cancel(Text(LocalizedString("No, Keep as is", comment: "Button text to cancel silent tone")))
                     ])
@@ -210,6 +239,9 @@ struct DanaKitSettingsView: View {
                         Text(String(viewModel.reservoirAge!))
                             .foregroundColor(.secondary)
                     }
+                    .onLongPressGesture(perform: {
+                        viewModel.updateReservoirAge()
+                    })
                 }
                 
                 if (viewModel.cannulaAge != nil) {
@@ -219,6 +251,9 @@ struct DanaKitSettingsView: View {
                         Text(String(viewModel.cannulaAge!))
                             .foregroundColor(.secondary)
                     }
+                    .onLongPressGesture(perform: {
+                        viewModel.updateCannulaAge()
+                    })
                 }
             }
             
@@ -244,6 +279,24 @@ struct DanaKitSettingsView: View {
                     Text(LocalizedString("User options", comment: "Title for user options"))
                         .foregroundColor(Color.primary)
                 }
+//                Button(action: {
+//                    viewModel.showingBlindReservoirCannulaRefill = true
+//                }) {
+//                    HStack {
+//                        Text(LocalizedString("Reservoir/cannula refill", comment: "Title for reservoir/cannula refill"))
+//                        Spacer()
+//                        NavigationLink(destination: ReservoirCannulaRefillView, isActive: $showingReservoirCannulaRefillView) { EmptyView() }
+//                            .hidden()
+//                            .frame(width: 0, height: 0)
+//                        Image(systemName: "chevron.right")
+//                            .font(.system(size: UIFont.systemFontSize, weight: .medium))
+//                            .opacity(0.35)
+//                    }
+//                    .foregroundColor(Color.primary)
+//                }
+//                .actionSheet(isPresented: $viewModel.showingBlindReservoirCannulaRefill) {
+//                    blindReservoirCannulaRefill
+//                }
             }
             
             Section(header: SectionHeader(label: LocalizedString("Pump information", comment: "The title of the pump information section in DanaKit settings"))) {
@@ -289,8 +342,18 @@ struct DanaKitSettingsView: View {
                     Text(String(viewModel.batteryLevel) + "%")
                         .foregroundColor(.secondary)
                 }
+                .onLongPressGesture(perform: {
+                    viewModel.showingBolusSyncingDisabled = true
+                })
+                .actionSheet(isPresented: $viewModel.showingBolusSyncingDisabled) {
+                    disableBolusSync
+                }
+            }
+            
+            Section(header: SectionHeader(label: LocalizedString("Pump time", comment: "The title of the pump time section in DanaKit settings"))) {
                 HStack {
-                    Text(LocalizedString("Pump time", comment: "Text for pump time")).foregroundColor(Color.primary)
+                    Text(LocalizedString("Pump time", comment: "Text for pump time"))
+                        .foregroundColor(Color.primary)
                     Spacer()
                     if viewModel.showPumpTimeSyncWarning {
                         Image(systemName: "clock.fill")
@@ -299,27 +362,39 @@ struct DanaKitSettingsView: View {
                     Text(String(viewModel.formatDate(viewModel.pumpTime)))
                         .foregroundColor(viewModel.showPumpTimeSyncWarning ? guidanceColors.warning : .secondary)
                 }
+                HStack {
+                    Text(LocalizedString("Checked at", comment: "Text for pump time synced at"))
+                        .foregroundColor(Color.primary)
+                    Spacer()
+                    Text(String(viewModel.formatDate(viewModel.pumpTimeSyncedAt)))
+                        .foregroundColor(.secondary)
+                }
+                
+                Toggle(LocalizedString("Nightly pump time sync", comment: "Text for Nightly pump time sync"), isOn: $viewModel.nightlyPumpTimeSync)
+                    .onChange(of: viewModel.nightlyPumpTimeSync) { value in
+                        viewModel.updateNightlyPumpTimeSync(value)
+                    }
                 
                 Button(action: {
                     viewModel.showingTimeSyncConfirmation = true
                 }) {
-                    Text(LocalizedString("Sync Pump time", comment: "Label for syncing the time on the pump"))
+                    Text(LocalizedString("Manually sync Pump time", comment: "Label for syncing the time on the pump"))
                         .foregroundColor(.accentColor)
                 }
                 .disabled(viewModel.isSyncing)
                 .actionSheet(isPresented: $viewModel.showingTimeSyncConfirmation) {
                     syncPumpTime
                 }
-                
+            }
+             
+            Section() {
                 Button(LocalizedString("Share Dana pump logs", comment: "DanaKit share logs")) {
                     self.isSharePresented = true
                 }
                 .sheet(isPresented: $isSharePresented, onDismiss: { }, content: {
                     ActivityViewController(activityItems: viewModel.getLogs())
                 })
-            }
-            
-            Section() {
+                
                 Button(action: {
                     viewModel.showingDeleteConfirmation = true
                 }) {
@@ -442,6 +517,15 @@ struct DanaKitSettingsView: View {
         }
         
         return guidanceColors.critical
+    }
+    
+    @ViewBuilder
+    private var ReservoirCannulaRefillView: some View {
+        if self.cannulaOnly {
+            DanaKitRefillCannulaView(viewModel: DanaKitRefillReservoirCannulaViewModel(cannulaOnly: true))
+        } else {
+            DanaKitRefillReservoirView(viewModel: DanaKitRefillReservoirCannulaViewModel(cannulaOnly: false))
+        }
     }
 }
 

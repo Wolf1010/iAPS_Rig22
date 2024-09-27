@@ -1069,10 +1069,13 @@ extension Home {
                     Button { state.showModal(for: .addCarbs(editMode: false, override: false)) }
                     label: {
                         ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
+                            // Image("carbs3")
+                            //     .resizable()
+                            //    .scaledToFit()
+                            //    .frame(width: 50, height: 50)
                             Image(systemName: "fork.knife")
                                 .renderingMode(.template)
                                 .font(.custom("Buttons", size: 26))
-                                .foregroundColor(.white)
                                 .padding(8)
                                 .foregroundStyle(Color.white)
                             if let carbsReq = state.carbsRequired {
