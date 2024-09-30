@@ -1,3 +1,4 @@
+// HomeRootView Design by Rig22
 import Charts
 import Combine
 import CoreData
@@ -56,6 +57,14 @@ extension Home {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
             formatter.maximumFractionDigits = 2
+            return formatter
+        }
+
+        private var tempRatenumberFormatter: NumberFormatter {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.maximumFractionDigits = 2
+            formatter.minimumFractionDigits = 2 // Immer zwei Nachkommastellen anzeigen
             return formatter
         }
 
@@ -179,6 +188,7 @@ extension Home {
         }
 
         // Fortschrittsanzeige
+
         private func startProgress() {
             Timer.scheduledTimer(withTimeInterval: 0.02, repeats: true) { timer in
                 withAnimation(Animation.linear(duration: 0.02)) {
@@ -190,7 +200,8 @@ extension Home {
             }
         }
 
-        // Progressbar by Rig22
+        // Progressbar
+
         public struct CircularProgressViewStyle: ProgressViewStyle {
             public func makeBody(configuration: Configuration) -> some View {
                 let progress = CGFloat(configuration.fractionCompleted ?? 0)
@@ -219,6 +230,7 @@ extension Home {
         }
 
         // Progressbar in rounded style
+
         func bolusProgressView(progress: Decimal, amount: Decimal) -> some View {
             ZStack {
                 VStack(alignment: .leading, spacing: 5) {
@@ -239,7 +251,7 @@ extension Home {
             }
         }
 
-        // headerView by Rig22
+        // headerView
 
         @ViewBuilder private func headerView(_ geo: GeometryProxy) -> some View {
             addBackground()
@@ -249,148 +261,151 @@ extension Home {
                 .overlay {
                     infoPanelTop
                     VStack {
-                        ZStack {
-                            // Dynamisches Layout mit GeometryReader
-                            GeometryReader { geometry in
-                                VStack {
-                                    // Linker Block
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            HStack(spacing: 8) {
-                                                Image(systemName: "chart.xyaxis.line")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 16, height: 16)
-                                                    .foregroundColor(.white)
+                        // Oberer Bereich
+                        VStack {
+                            HStack {
+                                // Linker Block
+                                VStack(alignment: .leading, spacing: 8) {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: "chart.xyaxis.line")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 16, height: 16)
+                                            .foregroundColor(.white)
 
-                                                if let tempBasalString = tempBasalString {
-                                                    Text(tempBasalString)
-                                                        .font(.system(size: 16))
-                                                        .foregroundStyle(Color.white)
-                                                }
-                                            }
-                                            .padding(.leading, 6)
-                                        }
+                                        if let tempRate = state.tempRate {
+                                            let rateString = tempRatenumberFormatter.string(from: tempRate as NSNumber) ?? "0"
+                                            let manualBasalString = state.apsManager.isManualTempBasal
+                                                ? NSLocalizedString(" Manual", comment: "Manual Temp basal")
+                                                : ""
 
-                                        Spacer()
-
-                                        // GlucoseView bleibt zentriert
-                                        glucoseView
-                                            .frame(
-                                                width: geometry.size.width * 0.33
-                                            )
-                                            .overlay(
-                                                ZStack {
-                                                    if let progress = state.bolusProgress {
-                                                        ProgressView(
-                                                            value: Double(truncating: progress as NSNumber)
-                                                        )
-                                                        .progressViewStyle(CircularProgressViewStyle())
-                                                        .frame(width: 120, height: 120)
-                                                        .animation(.easeInOut, value: progress)
-
-                                                        // Hintergrund Füllung für Glucose Ring
-                                                        Circle()
-                                                            .fill(Color.rig22BGGlucoseWheel.opacity(1.0))
-                                                            .frame(width: 110, height: 110)
-
-                                                        VStack {
-                                                            Circle()
-                                                                .fill(Color.red.opacity(1.0))
-                                                                .frame(width: 20, height: 20)
-                                                                .overlay(
-                                                                    Image(systemName: "xmark")
-                                                                        .font(.system(size: 13))
-                                                                        .foregroundColor(.white)
-                                                                        .onTapGesture {
-                                                                            state.cancelBolus()
-                                                                        }
-                                                                )
-                                                                .padding(.bottom, 5)
-                                                            if let progress = state.bolusProgress,
-                                                               let amount = state.bolusAmount
-                                                            {
-                                                                // Anzeigen des Bolusfortschritts
-                                                                let bolusedValue = amount * progress
-                                                                let bolused = bolusProgressFormatter
-                                                                    .string(from: bolusedValue as NSNumber) ?? ""
-                                                                let formattedAmount = amount
-                                                                    .formatted(.number.precision(.fractionLength(2)))
-
-                                                                let bolusText =
-                                                                    "\(bolused) \(NSLocalizedString("/", comment: "")) \(formattedAmount) \(NSLocalizedString("U", comment: ""))"
-
-                                                                Text(bolusText)
-                                                                    .font(.system(size: 14))
-                                                                    .foregroundStyle(Color.white)
-                                                                    .offset(y: 2)
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            )
-
-                                        Spacer()
-
-                                        // eventalBG und optionaler Pfeil
-                                        if let eventualBG = state.eventualBG {
-                                            HStack(spacing: 4) {
-                                                Text("⇢")
-                                                    .font(.statusFont)
-                                                    .foregroundStyle(.white)
-                                                let eventualBGValue = state.units == .mmolL ? eventualBG
-                                                    .asMmolL : Decimal(eventualBG)
-                                                if let formattedBG = fetchedTargetFormatter
-                                                    .string(from: eventualBGValue as NSNumber)
-                                                {
-                                                    Text(formattedBG)
-                                                        .font(.system(size: 16))
-                                                        .foregroundColor(.white)
-                                                }
-
-                                                Text(state.units.rawValue)
-                                                    .font(.system(size: 12))
-                                                    .foregroundStyle(.white)
-                                                    .padding(.leading, -2)
-                                            }
+                                            Text(rateString)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.white)
+                                                +
+                                                Text(" U/hr")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.white)
+                                                +
+                                                Text(manualBasalString)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.white)
                                         }
                                     }
-
-                                    .padding(.horizontal, 22) // Abstand rechter Rand
-                                    .padding(.top, -20)
+                                    .padding(.leading, 6)
                                 }
-                                .offset(y: 90)
-                            }
 
-                            // Unterer Bereich
-                            VStack {
                                 Spacer()
 
-                                HStack {
-                                    Spacer()
-                                    carbsView
-                                        .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 15)
-                                    Spacer()
-                                    loopView
-                                        .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 5)
-                                    Spacer()
-                                    insulinView
-                                        .frame(maxHeight: .infinity, alignment: .bottom)
-                                        .padding(.bottom, 15)
-                                    Spacer()
+                                // GlucoseView bleibt absolut zentriert
+                                glucoseView
+                                    .frame(width: 120, height: 120) // Fixe Größe für das Glucose-Rad
+                                    .overlay(
+                                        ZStack {
+                                            if let progress = state.bolusProgress {
+                                                ProgressView(value: Double(truncating: progress as NSNumber))
+                                                    .progressViewStyle(CircularProgressViewStyle())
+                                                    .frame(width: 120, height: 120)
+                                                    .animation(.easeInOut, value: progress)
+
+                                                // Hintergrundfüllung für den Glucosering
+                                                Circle()
+                                                    .fill(Color.rig22BGGlucoseWheel.opacity(1.0))
+                                                    .frame(width: 110, height: 110)
+
+                                                VStack {
+                                                    Circle()
+                                                        .fill(Color.red.opacity(1.0))
+                                                        .frame(width: 20, height: 20)
+                                                        .overlay(
+                                                            Image(systemName: "xmark")
+                                                                .font(.system(size: 13))
+                                                                .foregroundColor(.white)
+                                                                .onTapGesture {
+                                                                    state.cancelBolus()
+                                                                }
+                                                        )
+                                                        .padding(.bottom, 5)
+
+                                                    if let progress = state.bolusProgress, let amount = state.bolusAmount {
+                                                        let bolusedValue = amount * progress
+                                                        let bolused = bolusProgressFormatter
+                                                            .string(from: bolusedValue as NSNumber) ?? ""
+                                                        let formattedAmount = amount
+                                                            .formatted(.number.precision(.fractionLength(2)))
+
+                                                        let bolusText = "\(bolused) / \(formattedAmount) U"
+
+                                                        Text(bolusText)
+                                                            .font(.system(size: 14))
+                                                            .foregroundStyle(Color.white)
+                                                            .offset(y: 2)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    )
+                                // .offset(x: -4)
+
+                                Spacer()
+
+                                // Rechter Block (eventualBG)
+                                if let eventualBG = state.eventualBG {
+                                    HStack(spacing: 4) {
+                                        Text("⇢")
+                                            .font(.statusFont)
+                                            .foregroundStyle(.white)
+
+                                        let eventualBGValue = state.units == .mmolL ? eventualBG.asMmolL : Decimal(eventualBG)
+
+                                        if let formattedBG = fetchedTargetFormatter
+                                            .string(from: eventualBGValue as NSNumber)
+                                        {
+                                            Text(formattedBG)
+                                                .font(.system(size: 16))
+                                                .foregroundColor(.white)
+                                        }
+
+                                        Text(state.units.rawValue)
+                                            .font(.system(size: 12))
+                                            .foregroundStyle(.white)
+                                            .padding(.leading, -4)
+                                    }
                                 }
-                                .dynamicTypeSize(...DynamicTypeSize.xLarge)
-                                .padding(.horizontal, 10)
                             }
+                            .padding(.horizontal, 22) // Seitenabstand für den HStack
+                            .padding(.top, -15) // Oberer Rand
+                        }
+                        .offset(y: 90)
+
+                        // Unterer Bereich
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                carbsView
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                    .padding(.bottom, 15)
+                                Spacer()
+                                loopView
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                    .padding(.bottom, 5)
+                                Spacer()
+                                insulinView
+                                    .frame(maxHeight: .infinity, alignment: .bottom)
+                                    .padding(.bottom, 15)
+                                Spacer()
+                            }
+                            .dynamicTypeSize(...DynamicTypeSize.xLarge)
+                            .padding(.horizontal, 10)
                         }
                     }
                 }
                 .clipShape(Rectangle())
         }
 
-        // Pie Animation by Rig22
+        // Pie Animation
+
         struct PieSliceView: Shape {
             var startAngle: Angle
             var endAngle: Angle
@@ -442,8 +457,8 @@ extension Home {
             var color: Color
             var backgroundColor: Color
             var displayText: String
-            var symbolSize: CGFloat
-            var symbol: String
+            //  var symbolSize: CGFloat
+            //  var symbol: String
             var animateProgress: Bool
 
             var body: some View {
@@ -460,13 +475,13 @@ extension Home {
                         )
                         .fill(color)
                         .frame(width: 60, height: 60)
-                        .opacity(0.6)
+                        .opacity(0.7)
 
-                        Image(systemName: symbol)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: symbolSize, height: symbolSize)
-                            .foregroundColor(.white)
+                        /*   Image(systemName: symbol)
+                         .resizable()
+                         .scaledToFit()
+                         .frame(width: symbolSize, height: symbolSize)
+                         .foregroundColor(.white)*/
                     }
 
                     Text(displayText)
@@ -509,7 +524,7 @@ extension Home {
                         )
                         .fill(color)
                         .frame(width: 40, height: 40)
-                        .opacity(0.6)
+                        .opacity(0.5) // Transparenz der Pie Farb Füllung
 
                         Image(systemName: symbol)
                             .resizable()
@@ -533,7 +548,8 @@ extension Home {
             }
         }
 
-        // CarbView by Rig22
+        // CarbView
+
         @StateObject private var carbsPieSegmentViewModel = PieSegmentViewModel()
 
         var carbsView: some View {
@@ -545,7 +561,7 @@ extension Home {
                             let maxValue = max(Double(settings.preferences.maxCOB), 1)
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
-                            let carbSymbol = "fork.knife"
+                            //  let carbSymbol = "fork.knife"
 
                             FillablePieSegment(
                                 pieSegmentViewModel: carbsPieSegmentViewModel,
@@ -553,8 +569,8 @@ extension Home {
                                 color: .loopYellow,
                                 backgroundColor: .gray,
                                 displayText: "\(numberFormatter.string(from: (state.suggestion?.cob ?? 0) as NSNumber) ?? "0")g",
-                                symbolSize: 35,
-                                symbol: "",
+                                //  symbolSize: 35,
+                                //  symbol: "",
                                 animateProgress: true
                             )
                             Image("carbs3")
@@ -567,9 +583,9 @@ extension Home {
             }
         }
 
-        @StateObject private var insulinPieSegmentViewModel = PieSegmentViewModel()
+        // InsulinView
 
-        // InsulinView by Rig22
+        @StateObject private var insulinPieSegmentViewModel = PieSegmentViewModel()
 
         var insulinView: some View {
             HStack {
@@ -580,7 +596,7 @@ extension Home {
                             let maxValue = max(Double(settings.preferences.maxIOB), 1)
                             let fraction = CGFloat(substance / maxValue)
                             let fill = max(min(fraction, 1.0), 0.0)
-                            let insulinSymbol = "syringe"
+                            //  let insulinSymbol = "syringe"
 
                             FillablePieSegment(
                                 pieSegmentViewModel: insulinPieSegmentViewModel,
@@ -588,8 +604,8 @@ extension Home {
                                 color: substance < 0 ? .blue : .insulin,
                                 backgroundColor: .gray,
                                 displayText: "\(insulinnumberFormatter.string(from: (state.suggestion?.iob ?? 0) as NSNumber) ?? "0")U",
-                                symbolSize: 0,
-                                symbol: "",
+                                // symbolSize: 0,
+                                // symbol: "",
                                 animateProgress: true
                             )
                             Image("iob")
@@ -601,6 +617,8 @@ extension Home {
                 }
             }
         }
+
+        // infoPanal
 
         var infoPanel: some View {
             ZStack {
@@ -614,28 +632,29 @@ extension Home {
             guard let level = reservoirLevel else { return Color.gray.opacity(0.0) }
 
             if level < 20 {
-                return Color.red.opacity(0.7)
+                return .red
             } else if level < 50 {
-                return Color.yellow.opacity(0.7)
+                return .yellow
             } else if level <= 300 {
-                return Color.green.opacity(0.7)
+                return .green
             } else {
-                return Color.gray.opacity(0.7)
+                return .gray
             }
         }
+
+        // Zweireihiger InfoPanel mit Dana Status Anzeigen
 
         @StateObject private var cannulaPieSegmentViewModel = PieSegmentViewModel()
         @StateObject private var batteryPieSegmentViewModel = PieSegmentViewModel()
         @StateObject private var reservoirPieSegmentViewModel = PieSegmentViewModel()
         @StateObject private var connectionPieSegmentViewModel = PieSegmentViewModel()
 
-        // Zweireihiger InfoPanel mit Dana Status Anzeigen
-
         var info: some View {
             // Obere Reihe
             VStack(spacing: 10) {
                 HStack(spacing: 10) {
                     // Reservoir Stand
+
                     HStack(spacing: 5) {
                         let maxValue = Decimal(300)
                         // let reservoirSymbol = "cross.vial"
@@ -668,7 +687,7 @@ extension Home {
                                 )
                                 .frame(width: 40, height: 40)
 
-                                Image("vial_2")
+                                Image("vial")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 40, height: 40)
@@ -679,6 +698,7 @@ extension Home {
                     }
 
                     // PumpenBatterie
+
                     HStack(spacing: 10) {
                         var batteryColor: Color {
                             if let batteryChargeString = state.pumpBatteryChargeRemaining,
@@ -686,18 +706,17 @@ extension Home {
                             {
                                 switch batteryCharge {
                                 case ...25:
-                                    return Color.red.opacity(0.7)
+                                    return .red
                                 case ...50:
-                                    return Color.yellow.opacity(0.7)
+                                    return .yellow
                                 default:
-                                    return Color.green.opacity(0.7)
+                                    return .green
                                 }
                             } else {
                                 return Color.gray.opacity(0.0)
                             }
                         }
 
-                        // Batterietext-Logik
                         let batteryText: String = {
                             if let batteryChargeString = state.pumpBatteryChargeRemaining,
                                let batteryCharge = Double(batteryChargeString)
@@ -754,6 +773,7 @@ extension Home {
                     }
 
                     // DanaRS Symbol
+
                     HStack(spacing: 10) {
                         Text("⇠")
                             .font(.system(size: 20))
@@ -762,9 +782,11 @@ extension Home {
 
                         ZStack {
                             Image("ic_dana_rs")
+                                // Image("ic_dana_i")
                                 .resizable()
                                 .scaledToFit()
                                 .frame(width: 50, height: 50)
+                            /*  Image(uiImage: UIImage(named: imageName, in: Bundle(for: DanaKitHUDProvider.self), compatibleWith: nil)!)*/
                         }
                         .padding(.horizontal, 5)
 
@@ -779,7 +801,8 @@ extension Home {
                         }
                     }
 
-                    // Kanülenalter mit Pie-Chart
+                    // Kanülenalter
+
                     HStack(spacing: 10) {
                         let cannulaFraction: CGFloat = {
                             if let cannulaHours = state.cannulaHours {
@@ -797,15 +820,16 @@ extension Home {
                             if let cannulaHours = state.cannulaHours {
                                 switch cannulaHours {
                                 case ..<48:
-                                    return Color.green.opacity(0.7)
+                                    return .green
                                 case 48 ..< 71:
-                                    return Color.yellow.opacity(0.7)
+                                    return .yellow
                                 case 72...:
-                                    return Color.red.opacity(0.7) default:
-                                    return Color.gray.opacity(0.7)
+                                    return Color.red.opacity(1.0)
+                                default:
+                                    return .gray
                                 }
                             } else {
-                                return Color.gray.opacity(0.7)
+                                return Color.gray.opacity(0.3)
                             }
                         }()
 
@@ -833,9 +857,10 @@ extension Home {
                     }
 
                     // Bluetooth Connection
+
                     HStack(spacing: 10) {
                         let connectionFraction: CGFloat = state.isConnected ? 1.0 : 0.0
-                        let connectionColor: Color = state.isConnected ? Color.blue.opacity(0.7) : Color.gray.opacity(0.3)
+                        let connectionColor: Color = state.isConnected ? .blue : .gray
 
                         ZStack {
                             SmallFillablePieSegment(
@@ -861,6 +886,7 @@ extension Home {
                 }
 
                 // Untere Reihe
+
                 HStack {
                     if state.pumpSuspended {
                         Text("Pump suspended")
@@ -874,9 +900,11 @@ extension Home {
                         Text(tempTargetString)
                             .foregroundStyle(Color.white)
                             .frame(maxWidth: UIScreen.main.bounds.width * 0.4, alignment: .center)
+                            .frame(height: 20) // Fixed height
                     } else {
                         profileView
                             .frame(maxWidth: UIScreen.main.bounds.width * 0.4, alignment: .center)
+                            .frame(height: 20) // Fixed height
                     }
 
                     if state.closedLoop, state.settingsManager.preferences.maxIOB == 0 {
@@ -886,7 +914,6 @@ extension Home {
                             .frame(maxWidth: UIScreen.main.bounds.width * 0.3, alignment: .trailing)
                     }
                 }
-                .padding(.top, 10)
             }
             .onReceive(timer) { _ in
                 state.specialDanaKitFunction()
@@ -908,7 +935,7 @@ extension Home {
             HStack(spacing: 25) {
                 // Linker Stack
                 if let currentISF = state.isf {
-                    HStack {
+                    HStack(spacing: 4) {
                         Text("ISF:")
                             .foregroundColor(.white)
                             .font(.system(size: 15))

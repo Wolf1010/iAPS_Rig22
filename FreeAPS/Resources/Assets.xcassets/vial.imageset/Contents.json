@@ -1,18 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "vial_stroke_light.svg",
-      "idiom" : "universal"
+      "filename" : "vial_2.svg",
+      "idiom" : "universal",
+      "scale" : "1x"
     },
     {
-      "appearances" : [
-        {
-          "appearance" : "luminosity",
-          "value" : "dark"
-        }
-      ],
-      "filename" : "vial_stroke_dark.svg",
-      "idiom" : "universal"
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
     }
   ],
   "info" : {

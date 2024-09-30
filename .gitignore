@@ -36,6 +36,7 @@ build/
 *.cer
 *.mobileprovision
 *.p12
+ConfigOverride.xcconfig
 
 # Swift Package Manager
 .build/

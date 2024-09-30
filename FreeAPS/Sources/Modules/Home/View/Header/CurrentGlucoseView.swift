@@ -56,20 +56,15 @@ struct CurrentGlucoseView: View {
 
         let angularGradient = AngularGradient(
             gradient: Gradient(colors: [
-                /* Color.blue.opacity(0.2),
-                 Color.blue.opacity(0.3),
-                 Color.blue.opacity(0.4),
-                 Color.blue.opacity(0.4),
-                 Color.blue.opacity(0.4),
-                 Color.blue.opacity(0.3),
-                 Color.blue.opacity(0.2)*/
+                Color.blue.opacity(0.7),
                 Color.blue.opacity(0.6),
                 Color.blue.opacity(0.6),
+                Color.blue.opacity(0.5),
+                Color.blue.opacity(0.5),
+                Color.blue.opacity(0.5),
                 Color.blue.opacity(0.6),
                 Color.blue.opacity(0.6),
-                Color.blue.opacity(0.6),
-                Color.blue.opacity(0.6),
-                Color.blue.opacity(0.6)
+                Color.blue.opacity(0.7)
             ]),
             center: .center,
             startAngle: .degrees(0),
@@ -143,9 +138,17 @@ struct CurrentGlucoseView: View {
                 rotationDegrees = 0
             }
             // Schneller Bump-Effekt auf separater Variable
-            withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.5)) {
-                bumpEffect = 5 // Schneller Bump nach der Rotation
-                bumpEffect = 0 // wird das auskommentiert gibt es eine langasame Animation
+            /*  withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.5)) {
+                 bumpEffect = 5 // Schneller Bump nach der Rotation
+                 //  bumpEffect = 0 // wird das auskommentiert gibt es eine langasame Animation
+             }*/
+            withAnimation(.interpolatingSpring(stiffness: 120, damping: 8).delay(0.3)) {
+                bumpEffect = 5
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                withAnimation(.easeOut(duration: 1.0)) {
+                    bumpEffect = 0
+                }
             }
         }
     }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg width="100%" height="100%" viewBox="0 0 1320 1320" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g id="bluetooth2" transform="matrix(1,0,0,1,-11.217,0.636636)">
+    <g id="bluetooth" transform="matrix(1.02926,0,0,1.05685,-23.4327,-57.6294)">
         <g transform="matrix(7.8286e-17,1.26761,-1.01803,6.28534e-17,1280.57,134.846)">
             <path d="M286.84,349.371L448.207,633.266L125.473,633.266L286.84,349.371ZM286.313,412.878L173.651,597.962L399.147,597.8L286.313,412.878Z" style="fill:white;"/>
         </g>
