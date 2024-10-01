@@ -138,18 +138,18 @@ struct CurrentGlucoseView: View {
                 rotationDegrees = 0
             }
             // Schneller Bump-Effekt auf separater Variable
-            /*  withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.5)) {
-                 bumpEffect = 5 // Schneller Bump nach der Rotation
-                 //  bumpEffect = 0 // wird das auskommentiert gibt es eine langasame Animation
+            withAnimation(.interpolatingSpring(stiffness: 100, damping: 5).delay(0.5)) {
+                bumpEffect = 5 // Schneller Bump nach der Rotation
+                bumpEffect = 0 // wird das auskommentiert gibt es eine langasame Animation
+            }
+            /* withAnimation(.interpolatingSpring(stiffness: 120, damping: 8).delay(0.3)) {
+                 bumpEffect = 5
+             }
+             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                 withAnimation(.easeOut(duration: 1.0)) {
+                     bumpEffect = 0
+                 }
              }*/
-            withAnimation(.interpolatingSpring(stiffness: 120, damping: 8).delay(0.3)) {
-                bumpEffect = 5
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                withAnimation(.easeOut(duration: 1.0)) {
-                    bumpEffect = 0
-                }
-            }
         }
     }
 

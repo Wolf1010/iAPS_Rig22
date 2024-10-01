@@ -259,7 +259,7 @@ extension Home {
                     maxHeight: fontSize < .extraExtraLarge ? 220 + geo.safeAreaInsets.top : 155 + geo.safeAreaInsets.top
                 )
                 .overlay {
-                    infoPanelTop
+                    //   infoPanelTop
                     VStack {
                         // Oberer Bereich
                         VStack {
@@ -1066,8 +1066,8 @@ extension Home {
             // let ratio = state.timeSettings ? 1.61 : 1.44
             // let ratio2 = state.timeSettings ? 1.65 : 1.51
             // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.75 : 1.60 // TimeSetting true
-            let ratio2 = state.timeSettings ? 1.85 : 1.70 // Timesetting false
+            let ratio = state.timeSettings ? 1.76 : 1.65 // TimeSetting ein
+            let ratio2 = state.timeSettings ? 1.88 : 1.73 // Timesetting aus
 
             return addBackground()
                 .overlay {
@@ -1084,6 +1084,7 @@ extension Home {
         @ViewBuilder private func buttonPanel(_ geo: GeometryProxy) -> some View {
             ZStack {
                 addBackground()
+                infoPanelTop
                 LinearGradient(
                     gradient: Gradient(colors: [.rig22bottomPanel, .rig22bottomPanel]),
                     startPoint: .top,
@@ -1427,6 +1428,8 @@ extension Home {
                             display.toggle()
                         }
                     }
+                    // infoPanelTop
+                    //     .padding(.top, 10)
                     buttonPanel(geo)
                         .frame(height: 60)
                 }
