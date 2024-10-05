@@ -34,8 +34,8 @@ extension StatConfig {
         var body: some View {
             Form {
                 Section {
-                    Toggle("Display Chart X - Grid lines", isOn: $state.xGridLines)
-                    Toggle("Display Chart Y - Grid lines", isOn: $state.yGridLines)
+                    /*   Toggle("Display Chart X - Grid lines", isOn: $state.xGridLines)
+                     Toggle("Display Chart Y - Grid lines", isOn: $state.yGridLines)*/
                     Toggle("Display Chart Threshold lines for Low and High", isOn: $state.rulerMarks)
                     Toggle("Standing / Laying TIR Chart", isOn: $state.oneDimensionalGraph)
                     HStack {

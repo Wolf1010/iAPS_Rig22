@@ -1019,6 +1019,7 @@ extension Home {
                             .font(.system(size: 13))
                             .frame(minWidth: 20, maxHeight: 25)
                             .padding(.horizontal, 2)
+                            .foregroundStyle(Color.white)
                             .background(button.active ? Color.blue.opacity(0.7) : Color.clear)
                             .cornerRadius(4)
                     }
