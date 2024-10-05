@@ -53,6 +53,15 @@ extension Home {
 
         @State private var progress: Double = 0.0 // Fortschrittswert als State-Variable
 
+        /*   struct Buttons: Identifiable {
+             let label: String
+             let number: String
+             var active: Bool
+             let hours: Int?
+             let action: (() -> Void)?
+             var id: String { label }
+         }*/
+
         private var numberFormatter: NumberFormatter {
             let formatter = NumberFormatter()
             formatter.numberStyle = .decimal
@@ -259,7 +268,7 @@ extension Home {
                     maxHeight: fontSize < .extraExtraLarge ? 220 + geo.safeAreaInsets.top : 155 + geo.safeAreaInsets.top
                 )
                 .overlay {
-                    //   infoPanelTop
+                    //   infoPanel2
                     VStack {
                         // Oberer Bereich
                         VStack {
@@ -345,7 +354,7 @@ extension Home {
                                             }
                                         }
                                     )
-                                // .offset(x: -4)
+                                    .offset(x: -2)
 
                                 Spacer()
 
@@ -618,7 +627,7 @@ extension Home {
             }
         }
 
-        // infoPanal
+        // infoPanel
 
         var infoPanel: some View {
             ZStack {
@@ -632,7 +641,7 @@ extension Home {
             guard let level = reservoirLevel else { return Color.gray.opacity(0.0) }
 
             if level < 20 {
-                return .red
+                return .red.opacity(1.0)
             } else if level < 50 {
                 return .yellow
             } else if level <= 300 {
@@ -651,8 +660,8 @@ extension Home {
 
         var info: some View {
             // Obere Reihe
-            VStack(spacing: 10) {
-                HStack(spacing: 10) {
+            VStack(spacing: 20) {
+                HStack(spacing: 20) {
                     // Reservoir Stand
 
                     HStack(spacing: 5) {
@@ -923,12 +932,46 @@ extension Home {
 
         var timer = Timer.publish(every: 5, on: .main, in: .common).autoconnect() // Aktualisiert alle 5 Sekunden
 
-        var infoPanelTop: some View {
+        var infoPanel2: some View {
             ZStack {
                 addBackground()
                 info2
             }
             .frame(maxWidth: .infinity, maxHeight: 25)
+            .padding(.top, 120)
+        }
+
+        struct Buttons: Identifiable {
+            let label: String
+            let number: String
+            var active: Bool
+            let hours: Int?
+            var action: (() -> Void)?
+            var id: String { label }
+        }
+
+        @State var timeButtons: [Buttons] = [
+            Buttons(label: "3", number: "3h", active: false, hours: 3, action: nil),
+            Buttons(label: "6", number: "6h", active: false, hours: 6, action: nil),
+            Buttons(label: "12", number: "12h", active: false, hours: 12, action: nil),
+            Buttons(label: "24", number: "24h", active: false, hours: 24, action: nil),
+            Buttons(label: "UX", number: "UX", active: false, hours: nil, action: nil)
+        ]
+
+        func highlightButtons() {
+            for i in 0 ..< timeButtons.count {
+                timeButtons[i].active = timeButtons[i].hours == state.hours
+            }
+        }
+
+        func updateButtonActions() {
+            for i in 0 ..< timeButtons.count {
+                if timeButtons[i].label == "UX" {
+                    timeButtons[i].action = {
+                        state.showModal(for: .statisticsConfig)
+                    }
+                }
+            }
         }
 
         var info2: some View {
@@ -940,27 +983,54 @@ extension Home {
                             .foregroundColor(.white)
                             .font(.system(size: 15))
 
-                        if state.units == .mmolL {
-                            Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
-                                .foregroundStyle(Color.white)
-                                .font(.system(size: 15))
-                        } else {
-                            Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
-                                .foregroundStyle(Color.white)
-                                .font(.system(size: 15))
-                        }
+                        Text(glucoseFormatter.string(from: currentISF as NSNumber) ?? " ")
+                            .foregroundStyle(Color.white)
+                            .font(.system(size: 15))
+                    }
+                    .padding(.leading, 25)
+                    .frame(maxWidth: 100, alignment: .leading) // Links ausgerichtet
+                } else {
+                    HStack(spacing: 4) {
+                        Text("ISF:")
+                            .foregroundColor(.gray)
+                            .font(.system(size: 15))
+
+                        // Platzhalter, wenn kein ISF vorhanden ist
+                        Text("--")
+                            .foregroundStyle(Color.white)
+                            .font(.system(size: 15))
                     }
                     .padding(.leading, 25)
                     .frame(maxWidth: 100, alignment: .leading) // Links ausgerichtet
                 }
 
                 // Mittlerer Stack
-                GeometryReader { geometry in
-                    HStack(spacing: geometry.size.width * 0.05) {}
-                        .frame(width: geometry.size.width, alignment: .center)
+                HStack(spacing: 10) {
+                    ForEach(timeButtons) { button in
+                        Text(button.active ? NSLocalizedString(button.label, comment: "") : button.number)
+                            .onTapGesture {
+                                if let action = button.action {
+                                    action()
+                                } else if let hours = button.hours {
+                                    state.hours = hours
+                                    highlightButtons()
+                                }
+                            }
+                            .font(.system(size: 13))
+                            .frame(minWidth: 20, maxHeight: 25)
+                            .padding(.horizontal, 2)
+                            .background(button.active ? Color.blue.opacity(0.7) : Color.clear)
+                            .cornerRadius(4)
+                    }
+                    Spacer()
                 }
-                .frame(maxWidth: .infinity)
+                .font(buttonFont)
+                .frame(maxWidth: .infinity, alignment: .center)
 
+                .onAppear {
+                    highlightButtons()
+                    updateButtonActions()
+                }
                 // Rechter Stack - TDD
                 HStack {
                     Text("TDD: " + (numberFormatter.string(from: state.tddActualAverage as NSNumber) ?? "0"))
@@ -1063,28 +1133,25 @@ extension Home {
         }
 
         var chart: some View {
-            // let ratio = state.timeSettings ? 1.61 : 1.44
-            // let ratio2 = state.timeSettings ? 1.65 : 1.51
-            // Leicht erhöhte Ratios für eine moderate Verkleinerung
-            let ratio = state.timeSettings ? 1.76 : 1.65 // TimeSetting ein
-            let ratio2 = state.timeSettings ? 1.88 : 1.73 // Timesetting aus
+            let ratio = state.timeSettings ? 1.9 : 1.8 // TimeSetting ein
+            let ratio2 = state.timeSettings ? 2.0 : 1.9 // TimeSetting aus
 
             return addBackground()
                 .overlay {
                     VStack(spacing: 0) {
                         infoPanel
                         mainChart
-                            //  info2
                             .frame(width: UIScreen.main.bounds.width * 0.99) // Breite der mainChart anpassen
                     }
                 }
-                .frame(minHeight: UIScreen.main.bounds.height / (fontSize < .extraExtraLarge ? ratio : ratio2))
+                // Anpassung: Abhängig von timeSettings und Schriftgröße
+                .frame(minHeight: UIScreen.main.bounds.height / (state.timeSettings ? ratio : ratio2))
         }
 
         @ViewBuilder private func buttonPanel(_ geo: GeometryProxy) -> some View {
             ZStack {
                 addBackground()
-                infoPanelTop
+                //  info2
                 LinearGradient(
                     gradient: Gradient(colors: [.rig22bottomPanel, .rig22bottomPanel]),
                     startPoint: .top,
@@ -1093,19 +1160,18 @@ extension Home {
                 .frame(height: 60 + geo.safeAreaInsets.bottom)
                 let isOverride = fetchedPercent.first?.enabled ?? false
                 let isTarget = (state.tempTarget != nil)
+
                 HStack {
                     Button { state.showModal(for: .addCarbs(editMode: false, override: false)) }
                     label: {
                         ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom)) {
-                            // Image("carbs3")
-                            //     .resizable()
-                            //    .scaledToFit()
-                            //    .frame(width: 50, height: 50)
-                            Image(systemName: "fork.knife")
-                                .renderingMode(.template)
-                                .font(.custom("Buttons", size: 26))
-                                .padding(8)
-                                .foregroundStyle(Color.white)
+                            // Circle()
+                            //     .fill(Color.gray)
+                            //     .opacity(0.3)
+                            Image("carbs")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 45, height: 45)
                             if let carbsReq = state.carbsRequired {
                                 Text(numberFormatter.string(from: carbsReq as NSNumber)!)
                                     .font(.caption)
@@ -1123,33 +1189,48 @@ extension Home {
                         ))
                     }
                     label: {
-                        Image(systemName: "syringe")
-                            .renderingMode(.template)
-                            .font(.custom("Buttons", size: 26))
+                        Image("insulin")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 45, height: 45)
                     }
+                    /*  label: {
+                         VStack {
+                             Image("insulin")
+                                 .resizable()
+                                 .scaledToFit()
+                                 .frame(width: 50, height: 50)
+                             Text("Bolus")
+                                 .font(.system(size: 14))
+                             // .padding(.top, 2) // optional, um etwas Abstand zu schaffen
+                         }
+                         .padding(.bottom, 10)
+                     }*/
                     .buttonStyle(.borderless)
                     .foregroundStyle(Color.white)
                     Spacer()
                     if state.allowManualTemp {
                         Button { state.showModal(for: .manualTempBasal) }
                         label: {
-                            Image("bolus1")
-                                .renderingMode(.template)
+                            Image("insulin")
                                 .resizable()
-                                .frame(width: IAPSconfig.buttonSize, height: IAPSconfig.buttonSize, alignment: .bottom)
+                                .scaledToFit()
+                                .frame(width: 45, height: 45)
                         }
                         .foregroundStyle(Color.white)
                         Spacer()
                     }
                     ZStack(alignment: Alignment(horizontal: .trailing, vertical: .bottom))
                         {
-                            Image(systemName: isOverride ? "person.fill" : "person")
-                                .symbolRenderingMode(.palette)
-                                .font(.custom("Buttons", size: 26))
+                            Image(isOverride ? "personfill" : "person")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 45, height: 45)
+                                .font(.system(size: 14))
                                 .foregroundStyle(.white)
                                 .padding(8)
-                                .background(isOverride ? .blue.opacity(0.5) : .clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
+                            // .background(isOverride ? .blue.opacity(0.3) : .clear)
+                            // .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
                         .onTapGesture {
                             if isOverride {
@@ -1163,13 +1244,16 @@ extension Home {
                         }
                     if state.useTargetButton {
                         Spacer()
-                        Image(systemName: "scope")
-                            .renderingMode(.template)
-                            .font(.custom("Buttons", size: 26))
+                        Image(isTarget ? "temptargetactive" : "temptarget")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 45, height: 45)
+                            .font(.system(size: 14))
+                            .buttonStyle(.borderless)
                             .padding(8)
                             .foregroundStyle(Color.white)
-                            .background(isTarget ? .green.opacity(0.15) : .clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            // .background(isTarget ? .blue.opacity(0.15) : .clear)
+                            // .clipShape(RoundedRectangle(cornerRadius: 10))
                             .onTapGesture {
                                 if isTarget {
                                     showCancelTTAlert.toggle()
@@ -1184,9 +1268,13 @@ extension Home {
                     Spacer()
                     Button { state.showModal(for: .settings) }
                     label: {
-                        Image(systemName: "gear")
-                            .renderingMode(.template)
-                            .font(.custom("Buttons", size: 26))
+                        Image("settings2")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 45, height: 45)
+                            .font(.system(size: 14))
+                            .buttonStyle(.borderless)
+                            .foregroundStyle(Color.white)
                     }
                     .buttonStyle(.borderless)
                     .foregroundStyle(Color.white)
@@ -1206,6 +1294,7 @@ extension Home {
                     state.cancelTempTarget()
                 }
             }
+            .padding(.bottom, 20)
         }
 
         var preview: some View {
@@ -1373,23 +1462,6 @@ extension Home {
             .foregroundStyle(Color.white)
         }
 
-        var timeSetting: some View {
-            let string = "\(state.hours) " + NSLocalizedString("hours", comment: "") + "   "
-            return Menu(string) {
-                Button("3 " + NSLocalizedString("hours", comment: ""), action: { state.hours = 3 })
-                Button("6 " + NSLocalizedString("hours", comment: ""), action: { state.hours = 6 })
-                Button("12 " + NSLocalizedString("hours", comment: ""), action: { state.hours = 12 })
-                Button("24 " + NSLocalizedString("hours", comment: ""), action: { state.hours = 24 })
-                Button("UI/UX Settings", action: { state.showModal(for: .statisticsConfig) })
-            }
-            .buttonStyle(.borderless)
-            .foregroundStyle(Color.white)
-            .font(.timeSettingFont)
-            .padding(.vertical, -3)
-            .background(TimeEllipse(characters: string.count))
-            //           .offset(y: -60)
-        }
-
         var body: some View {
             GeometryReader { geo in
                 VStack(spacing: 0) {
@@ -1404,9 +1476,9 @@ extension Home {
                         ScrollViewReader { _ in
                             LazyVStack {
                                 chart
-                                if state.timeSettings { timeSetting }
-                                preview.padding(.top, state.timeSettings ? 20 : -5)
-                                loopPreview.padding(.top, 0)
+                                infoPanel2
+                                preview
+                                loopPreview
                                 if state.iobData.count > 5 {
                                     activeCOBView.padding(.top, 15)
                                     activeIOBView.padding(.top, 15)
@@ -1428,8 +1500,7 @@ extension Home {
                             display.toggle()
                         }
                     }
-                    // infoPanelTop
-                    //     .padding(.top, 10)
+                    //      .padding(.top, 10)
                     buttonPanel(geo)
                         .frame(height: 60)
                 }

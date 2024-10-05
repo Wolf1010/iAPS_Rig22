@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 1320 1320" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g id="insulin" transform="matrix(1.13332,0,0,1.19132,-87.9932,-97.1588)">
+        <g id="buttonpanel">
+            <g id="insulin1" serif:id="insulin">
+                <g id="insulin_big" transform="matrix(1.56448,0,0,1,-656.46,399.547)">
+                    <path d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673ZM840.556,180.705L583.304,666.729L1097.81,666.729L840.556,180.705Z" style="fill:white;"/>
+                    <clipPath id="_clip1">
+                        <path d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673ZM840.556,180.705L583.304,666.729L1097.81,666.729L840.556,180.705Z"/>
+                    </clipPath>
+                    <g clip-path="url(#_clip1)">
+                        <path id="insulin_big1" serif:id="insulin_big" d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673Z" style="fill:white;"/>
+                    </g>
+                </g>
+                <g id="insulin_big2" serif:id="insulin_big" transform="matrix(1.56448,0,0,1,-656.46,53.4294)">
+                    <path d="M555.789,714.478L519.99,714.478L841.468,103.673L1162.95,714.478L1127.15,714.478L841.468,171.691L555.789,714.478Z" style="fill:white;"/>
+                    <clipPath id="_clip2">
+                        <path d="M555.789,714.478L519.99,714.478L841.468,103.673L1162.95,714.478L1127.15,714.478L841.468,171.691L555.789,714.478Z"/>
+                    </clipPath>
+                    <g clip-path="url(#_clip2)">
+                        <path id="insulin_big3" serif:id="insulin_big" d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673Z" style="fill:white;"/>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
