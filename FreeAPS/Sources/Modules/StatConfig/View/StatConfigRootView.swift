@@ -34,8 +34,8 @@ extension StatConfig {
         var body: some View {
             Form {
                 Section {
-                    /*   Toggle("Display Chart X - Grid lines", isOn: $state.xGridLines)
-                     Toggle("Display Chart Y - Grid lines", isOn: $state.yGridLines)*/
+                    Toggle("Display Chart X - Grid lines", isOn: $state.xGridLines)
+                    Toggle("Display Chart Y - Grid lines", isOn: $state.yGridLines)
                     Toggle("Display Chart Threshold lines for Low and High", isOn: $state.rulerMarks)
                     Toggle("Standing / Laying TIR Chart", isOn: $state.oneDimensionalGraph)
                     HStack {
@@ -59,6 +59,11 @@ extension StatConfig {
                     Toggle("Display Temp Targets Button", isOn: $state.useTargetButton)
                 } header: { Text("Home View Button Panel ") }
                 footer: { Text("In case you're using both profiles and temp targets") }
+
+                Section {
+                    //       Toggle("Display special Dana Features Button", isOn: $state.specialDanaKitFunction)
+                } header: { Text("Speziell für Dana Kit ") }
+                footer: { Text("In case you're using DanaRs or Dana-i") }
 
                 Section {
                     Toggle("Never display the small glucose chart when scrolling", isOn: $state.skipGlucoseChart)

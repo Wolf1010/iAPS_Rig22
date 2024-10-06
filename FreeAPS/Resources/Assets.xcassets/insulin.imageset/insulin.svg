@@ -1,26 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="100%" height="100%" viewBox="0 0 1320 1320" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
-    <g id="insulin" transform="matrix(1.13332,0,0,1.19132,-87.9932,-97.1588)">
+<svg width="100%" height="100%" viewBox="0 0 1320 1320" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-miterlimit:1;">
+    <g id="insulin" transform="matrix(0.970554,0,0,0.95912,9.54591,29.3244)">
         <g id="buttonpanel">
             <g id="insulin1" serif:id="insulin">
-                <g id="insulin_big" transform="matrix(1.56448,0,0,1,-656.46,399.547)">
-                    <path d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673ZM840.556,180.705L583.304,666.729L1097.81,666.729L840.556,180.705Z" style="fill:white;"/>
-                    <clipPath id="_clip1">
-                        <path d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673ZM840.556,180.705L583.304,666.729L1097.81,666.729L840.556,180.705Z"/>
-                    </clipPath>
-                    <g clip-path="url(#_clip1)">
-                        <path id="insulin_big1" serif:id="insulin_big" d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673Z" style="fill:white;"/>
-                    </g>
+                <g id="Welle" transform="matrix(0.920015,0,0,0.596051,66.3661,865.595)">
+                    <path d="M18,648C84,576 147,432 216,432C285,432 360,648 432,648C504,648 576,432 648,432C720,432 792,648 864,648C936,648 1008,432 1080,432C1152,432 1224,576 1296,648" style="fill:none;stroke:white;stroke-width:60.02px;"/>
                 </g>
-                <g id="insulin_big2" serif:id="insulin_big" transform="matrix(1.56448,0,0,1,-656.46,53.4294)">
-                    <path d="M555.789,714.478L519.99,714.478L841.468,103.673L1162.95,714.478L1127.15,714.478L841.468,171.691L555.789,714.478Z" style="fill:white;"/>
-                    <clipPath id="_clip2">
-                        <path d="M555.789,714.478L519.99,714.478L841.468,103.673L1162.95,714.478L1127.15,714.478L841.468,171.691L555.789,714.478Z"/>
-                    </clipPath>
-                    <g clip-path="url(#_clip2)">
-                        <path id="insulin_big3" serif:id="insulin_big" d="M841.468,103.673L1162.95,714.478L519.99,714.478L841.468,103.673Z" style="fill:white;"/>
-                    </g>
+                <g transform="matrix(2.01601e-16,-3.89815,5.99172,3.48959e-16,-451.43,4537.63)">
+                    <path d="M899.299,163.951L1039.62,163.951L1039.62,120.589L1143.39,187.299L1039.62,254.01L1039.62,210.648L902.44,210.648C917.096,203.13 928.443,195.612 928.443,188.093C928.443,180.046 915.442,171.998 899.299,163.951Z" style="fill:white;"/>
                 </g>
             </g>
         </g>

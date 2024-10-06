@@ -302,7 +302,7 @@ struct MainChartView: View {
     }
 
     private func yGridView(fullSize: CGSize) -> some View {
-        let useColour = displayYgridLines ? Color.white : Color.white
+        let useColour = displayYgridLines ? Color.white : Color.clear
         return ZStack {
             Path { path in
                 let range = glucoseYRange
@@ -407,7 +407,7 @@ struct MainChartView: View {
     @Environment(\.colorScheme) var colorScheme
 
     private func xGridView(fullSize: CGSize) -> some View {
-        let useColour = displayXgridLines ? Color.white : Color.white
+        let useColour = displayXgridLines ? Color.white : Color.clear
         return ZStack {
             Path { path in
                 for hour in 0 ..< hours + hours {
